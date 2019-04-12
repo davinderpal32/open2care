@@ -27,15 +27,15 @@ definitions:
       name:
         type: string
         example: no_stress
-    UsersBody:
-    type: object
-    title: user
-    required:
-      - name
-    properties:
-      name:
-        type: string
-        example: hello    
+    # UsersBody:
+    # type: object
+    # title: user
+    # required:
+    #   - name
+    # properties:
+    #   name:
+    #     type: string
+    #     example: hi    
 
 paths:
   /examples:
@@ -92,18 +92,18 @@ paths:
       description: Fetch all users
       responses:
         200:
-          description: Returns all users
+          description: Returns all users      
     post:
       tags:
-        - Users
+        - addUser
       description: Create a new user
       parameters:
-        - name: example
+        - name: user
           in: body
           description: an user
           required: true
           schema: 
-            $ref: "#/definitions/UsersBody"
+            # $ref: "#/definitions/UsersBody"
       responses:
         200:
-          description: Returns all users        
+          description: Returns all users 
