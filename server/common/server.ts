@@ -36,13 +36,19 @@ export default class ExpressServer {
         console.log('setting client');
         mongoose.Promise = global.Promise;
         //const uri = "mongodb+srv://renuyadav:@renuyadav1@cluster0-d0ihi.mongodb.net/test?retryWrites=true";
-        var client = mongoose.connect(`${MONGO_PATH}`,{ useNewUrlParser: true },function(err, db){
-          console.log(db);
+        var client = mongoose.connect(`${MONGO_PATH}`,{ useNewUrlParser: true });
+
+        var db = mongoose.connection;
+        db.on('error', console.error.bind(console, 'connection error:'));
+        console.log("h1");
+        db.once('open', function callback () {
+          console.log("h");
         });
+        console.log('client', client);
 
         const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
         http.createServer(app).listen(p, welcome(p));
-        console.log(app);
+        //console.log(client);
         return app;
     } catch(error) {
       console.log('error during connecting to mongo: ');
