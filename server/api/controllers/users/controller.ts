@@ -2,15 +2,22 @@ import UsersService from '../../services/users.service';
 import { Request, Response } from 'express';
 
 export class Controller {
-  getUser(req: Request, res: Response): void {
-    UsersService.getUser().then(r => res.json(r));
+  all(req: Request, res: Response): void {
+    UsersService.all().then(r => res.json(r));
   }
-  
-  addUser(req: Request, res: Response): void {
-    UsersService.addUser(req.body.name).then(r =>
+
+  byId(req: Request, res: Response): void {
+    UsersService.byId(req.params.id).then(r => {
+      if (r) res.json(r);
+      else res.status(404).end();
+    });
+  }
+
+  create(req: Request, res: Response): void {
+    UsersService.create(req.body.name).then(r =>
       res
         .status(201)
-        .location(`<%= apiRoot %>/User/${r.id}`)
+        .location(`<%= apiRoot %>/examples/${r.id}`)
         .json(r),
     );
   }

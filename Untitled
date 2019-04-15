@@ -1,0 +1,961 @@
+<?php
+namespace App\Controller\Api;
+
+use Cake\Event\Event;
+use Cake\Network\Exception\UnauthorizedException;
+use Cake\Utility\Security;
+use Firebase\JWT\JWT;
+use App\Traits\Utility;
+use Cake\Mailer\Email;
+use Cake\Routing\Router;
+
+class UsersController extends AppController
+{
+     use Utility;
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadModel('Logins');
+        $this->loadModel('Albums');
+        $this->loadModel('Interests');
+        $this->loadModel('Thumblock');
+        $this->loadModel('Feedbacks');
+        $this->loadModel('UsersMoods');
+        $this->loadModel('BlockedUsers');
+        $this->loadModel('AlbumPermissions');
+        $this->loadModel('HistoryLocations');
+        $this->Auth->allow(['register', 'login','forgetPassword','verifyCode','resendCode','resetPassword','checkEmail','thumblock']);
+    }
+    public function register()
+    {
+        $this->autoRender = false;
+        $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+        if(!$userData){
+            $user = $this->Users->newEntity();
+            $user = $this->Users->patchEntity($user, $this->request->getData());
+            $user->type = 'user';
+            $user->updated_at = date('Y-m-d h:i:s');
+            if($this->request->getData('devicetype')!='' && $this->request->getData('devicetoken')!='' && $this->request->getData('deviceid')!=''){
+                if ($this->Users->save($user)) {
+                    $this->sendotp($user->id);
+                    $login = $this->Logins->newEntity();
+                    $login = $this->Logins->patchEntity($login, $this->request->getData());
+                    $login->userid = $user->id;
+                    if ($this->Logins->save($login)) {
+                            $token = JWT::encode([
+                            'sub' => $user->id,
+                            'email' => $user->email,
+                            'deviceid' => $login->deviceid
+                        ],
+                        Security::salt());
+                        $userupdate = $this->Users->get($user->id);
+                        $userupdate->remembertoken = $token;
+                        $this->Users->save($userupdate);
+                        $user = $this->Auth->identify();
+                        unset($user->password);
+                        $user['token'] = 'Bearer '.$token;
+                        return $this->_success($user,'register','User registered successfully.');
+                    }
+                    if($login->errors()){
+                    return $this->_error($this->_dataerrors($login->errors()));
+                    }
+                }
+                 if($user->errors()){
+                    return $this->_error($this->_dataerrors($user->errors()));
+                 }
+             }else{
+                return $this->_error('All fields are required');
+             }
+         }
+         else{
+            return $this->_error('Email already exists');
+         }
+    }
+
+
+    public function login()
+    {
+        $this->autoRender = false;
+        if($this->request->getData('email')!='' && $this->request->getData('password')!='' && $this->request->getData('devicetype')!='' &&$this->request->getData('devicetoken')!='' && $this->request->getData('deviceid')!=''){
+            $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+            if($userData){
+                $user = $this->Auth->identify();
+                if (!$user) {
+                    return $this->_error('This combination doesn’t work. Try Again!');
+                }
+                $this->_logoutOtherDevice($user['id']);
+                $islogin = $this->Logins->find()->where(['userid'=>$user['id']])->first();
+                // print_r($user['id']);die;
+                if($islogin){
+                    $login = $this->Logins->get($islogin['id']);
+                }else{
+                    $login = $this->Logins->newEntity();
+                    $login = $this->Logins->patchEntity($login, $this->request->getData());
+                    $login->userid = $user['id'];
+                }
+                // print_r($login);die;
+                $login->devicetype=$this->request->getData('devicetype');
+                $login->devicetoken=$this->request->getData('devicetoken');
+                $login->deviceid=$this->request->getData('deviceid');
+                $login->status=1;
+                $login->logintype='normal';
+                if ($this->Logins->save($login)) {
+                    $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user['id'],'is_profile'=>1])->first();
+                    // print_r($profile);die;
+                    if(empty($profile)){
+                        $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user['id']])->first();
+                    }
+                            if($profile){
+                                $user['profile']=$profile['picture'];
+                            }else{
+                                 $user['profile']='';
+                            }
+                    unset($user['password']);
+                    $token = JWT::encode([
+                        'sub' => $user['id'],
+                        'email' => $user['email'],
+                        'deviceid' => $login->deviceid
+                    ],
+                    Security::salt());
+                    $userupdate = $this->Users->get($user['id']);
+                        $userupdate->remembertoken = $token;
+                        $this->Users->save($userupdate);
+                    $user['token'] = 'Bearer '.$token;
+                    $user['lat'] = $userupdate->lat;
+                    $user['lng'] = $userupdate->lng;
+                    return $this->_success($user,'login','Login successfully.');
+                }
+                if($login->errors()){
+                    return $this->_error($this->_dataerrors($login->errors()));
+                }
+            }else{
+                return $this->_error('This email does not exist in our database.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    // public function login()
+    //     {
+    //         $this->autoRender = false;
+    //         if($this->request->getData('logintype')!=''){              // normal, thumblock
+    //             if($this->request->getData('logintype')=='normal'){
+    //                 /***********************************normal login **************************************/
+    //                 if($this->request->getData('email')!='' && $this->request->getData('password')!='' && $this->request->getData('devicetype')!='' &&$this->request->getData('devicetoken')!='' && $this->request->getData('deviceid')!=''){
+    //                     $user = $this->Auth->identify();
+    //                     // print_r($user);die;
+    //                     if (!$user) {
+    //                         return $this->_error('This combination doesn’t work. Try Again!');
+    //                     }
+    //                     $this->_logoutOtherDevice($user['id']);
+    //                     $login = $this->Logins->newEntity();
+    //                     $login = $this->Logins->patchEntity($login, $this->request->getData());
+    //                     $login->userid = $user['id'];
+    //                     $login->devicetype=$this->request->getData('devicetype');
+    //                     $login->devicetoken=$this->request->getData('devicetoken');
+    //                     $login->deviceid=$this->request->getData('deviceid');
+    //                     $login->logintype='normal';
+    //                     if ($this->Logins->save($login)) {
+    //                         $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user['id']])->first();
+    //                         if($profile){
+    //                             $user['profile']=$profile['picture'];
+    //                         }else{
+    //                              $user['profile']='';
+    //                         }
+    //                         unset($user['password']);
+    //                         $token = JWT::encode([
+    //                             'sub' => $user['id'],
+    //                             'email' => $user['email']
+    //                         ],
+    //                         Security::salt());
+    //                         $user['token'] = 'Bearer '.$token;
+    //                         return $this->_success($user,'login','Login successfully.');
+    //                     }
+    //                     if($login->errors()){
+    //                         return $this->_error($this->_dataerrors($login->errors()));
+    //                     }
+    //                 }
+    //                 else{
+    //                     return $this->_error('All fields are required.');
+    //                 }
+    //                 /***********************************normal login ends **********************************/
+    //             }else{
+    //                 /************************************thumblock login *********************************/
+    //                 if($this->request->getData('devicetype')!='' &&$this->request->getData('devicetoken')!='' && $this->request->getData('deviceid')!=''){
+    //                     $usersdetails = $this->Thumblock->find()->select('userid','status')->where(['deviceid'=>$this->request->getData('deviceid'),'devicetype'=>$this->request->getData('devicetype')])->first();
+    //                     if($usersdetails OR $usersdetails['status']==1 ){
+    //                         $user = $this->Users->get($usersdetails['userid']);
+    //                         if (!$user) {
+    //                             return $this->_error('This combination doesn’t work. Try Again!');
+    //                         }
+    //                         $this->_logoutOtherDevice($user['id']);
+    //                         $login = $this->Logins->newEntity();
+    //                         $login = $this->Logins->patchEntity($login, $this->request->getData());
+    //                         $login->userid = $user['id'];
+    //                         $login->devicetype=$this->request->getData('devicetype');
+    //                         $login->devicetoken=$this->request->getData('devicetoken');
+    //                         $login->deviceid=$this->request->getData('deviceid');
+    //                         $login->logintype='thumblock';
+    //                         if ($this->Logins->save($login)) {
+    //                             $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user['id']])->first();
+    //                             if($profile){
+    //                                 $user['profile']=$profile['picture'];
+    //                             }else{
+    //                                  $user['profile']='';
+    //                             }
+    //                             unset($user['password']);
+    //                             $token = JWT::encode([
+    //                                 'sub' => $user['id'],
+    //                                 'email' => $user['email']
+    //                             ],
+    //                             Security::salt());
+    //                             $user['token'] = 'Bearer '.$token;
+    //                             return $this->_success($user,'login','Login successfully.');
+    //                         }
+    //                         if($login->errors()){
+    //                             return $this->_error($this->_dataerrors($login->errors()));
+    //                         }
+    //                     }else{
+    //                         return $this->_error('Thumb lock disabled for this device.');
+    //                     }
+    //                 }
+    //                 else{
+    //                     return $this->_error('All fields are requiredgg.');
+    //                 }
+    //                 /*************************************thumblock login ends *******************************/
+    //             }
+    //         }else{
+    //             return $this->_error('Login type is required.');
+    //         }
+    //     }
+
+ public function thumblock()
+    {
+        $this->autoRender = false;
+        if($this->request->getData('devicetype')!='' &&$this->request->getData('devicetoken')!='' && $this->request->getData('deviceid')!=''){
+            $usersdetails = $this->Thumblock->find()->select(['userid','status'])->where(['deviceid'=>$this->request->getData('deviceid'),'devicetype'=>$this->request->getData('devicetype')])->first();
+            // print_r($usersdetails);die;
+            if($usersdetails AND $usersdetails['status']==1 ){
+                $user = $this->Users->find()->where(['id'=>$usersdetails->userid])->first();
+                if (!$user) {
+                    return $this->_error('This combination doesn’t work. Try Again!');
+                }else if($user['status']==2){
+                     return $this->_error('This account is suspended by admin. Please contact to admin for information.');
+                }
+                $this->_logoutOtherDevice($user['id']);
+                $islogin = $this->Logins->find()->where(['userid'=>$user['id']])->first();
+                // print_r($user['id']);die;
+                if($islogin){
+                    $login = $this->Logins->get($islogin['id']);
+                }else{
+                    $login = $this->Logins->newEntity();
+                    $login = $this->Logins->patchEntity($login, $this->request->getData());
+                    $login->userid = $user['id'];
+                }
+                // $login->userid = $user['id'];
+                $login->devicetype=$this->request->getData('devicetype');
+                $login->devicetoken=$this->request->getData('devicetoken');
+                $login->deviceid=$this->request->getData('deviceid');
+                $login->logintype='thumblock';
+                $login->status=1;
+                if ($this->Logins->save($login)) {
+                    $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user['id']])->first();
+                    if($profile){
+                        $user['profile']=$profile['picture'];
+                    }else{
+                         $user['profile']='';
+                    }
+                    unset($user['password']);
+                    $token = JWT::encode([
+                        'sub' => $user['id'],
+                        'email' => $user['email'],
+                        'deviceid' => $login->deviceid
+                    ],
+                    Security::salt());
+                    $userupdate = $this->Users->get($user['id']);
+                    $userupdate->remembertoken = $token;
+                    $this->Users->save($userupdate);
+                    $user['token'] = 'Bearer '.$token;
+                    unset($user['remembertoken']);
+                    return $this->_success($user,'login','Login successfully.');
+                }
+                if($login->errors()){
+                    return $this->_error($this->_dataerrors($login->errors()));
+                }
+            }else{
+                return $this->_error('Finger print is not enable for this device.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function forgetPassword(){
+        $this->autoRender = false;
+        if($this->request->getData('email')!=''){
+            $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+            if($userData){
+                if($userData['status']==1){
+                    $user = $this->sendotp($userData['id']);
+                    $email = new Email('default');
+                    $email->from(['STUMBL@example.com' => 'STUMBL'])
+                    ->to('osvinphp@gmail.com')
+                    ->setSubject('Forgot Password')
+                    ->emailFormat('both')
+                    ->send('
+                    <!doctype html>
+                    <html>
+                      <head>
+                        <meta name="viewport" content="width=device-width">
+                        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                        <title>OTP Number</title>
+                        <link href="https://fonts.googleapis.com/css?family=Black+Han+Sans|Lato:400,700,900" rel="stylesheet">
+                        <style>
+                        /* -------------------------------------
+                            INLINED WITH htmlemail.io/inline
+                        ------------------------------------- */
+                        /* -------------------------------------
+                            RESPONSIVE AND MOBILE FRIENDLY STYLES
+                        ------------------------------------- */
+                        @media only screen and (max-width: 620px) {
+                          table[class=body] h1 {
+                            font-size: 28px !important;
+                            margin-bottom: 10px !important;
+                          }
+                          table[class=body] p,
+                                table[class=body] ul,
+                                table[class=body] ol,
+                                table[class=body] td,
+                                table[class=body] span,
+                                table[class=body] a {
+                            font-size: 16px !important;
+                          }
+                          table[class=body] .wrapper,
+                                table[class=body] .article {
+                            padding: 10px !important;
+                          }
+                          table[class=body] .content {
+                            padding: 0 !important;
+                          }
+                          table[class=body] .container {
+                            padding: 0 !important;
+                            width: 100% !important;
+                          }
+                          table[class=body] .main {
+                            border-left-width: 0 !important;
+                            border-radius: 0 !important;
+                            border-right-width: 0 !important;
+                          }
+                          table[class=body] .btn table {
+                            width: 100% !important;
+                          }
+                          table[class=body] .btn a {
+                            width: 100% !important;
+                          }
+                          table[class=body] .img-responsive {
+                            height: auto !important;
+                            max-width: 100% !important;
+                            width: auto !important;
+                          }
+                        }
+
+                        /* -------------------------------------
+                            PRESERVE THESE STYLES IN THE HEAD
+                        ------------------------------------- */
+                        @media all {
+                          .ExternalClass {
+                            width: 100%;
+                          }
+                          .ExternalClass,
+                                .ExternalClass p,
+                                .ExternalClass span,
+                                .ExternalClass font,
+                                .ExternalClass td,
+                                .ExternalClass div {
+                            line-height: 100%;
+                          }
+                          .apple-link a {
+                            color: inherit !important;
+                            font-family:sans-serif;        font-size: inherit !important;
+                            font-weight: inherit !important;
+                            line-height: inherit !important;
+                            text-decoration: none !important;
+                          }
+                          .btn-primary table td:hover {
+                            background-color: #34495e !important;
+                          }
+                          .btn-primary a:hover {
+                            background-color: #34495e !important;
+                            border-color: #34495e !important;
+                          }
+                        }
+                        </style>
+                      </head>
+                      <body class="" style="background-color: #f6f6f6; font-family:sans-serif;-webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.4; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%;">
+                        <table border="0" cellpadding="0" cellspacing="0" class="body" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; background-color: #f6f6f6;">
+                          <tr>
+                            <td style="font-family:sans-serif;font-size: 14px; vertical-align: top;">&nbsp;</td>
+                            <td class="container" style="font-family:sans-serif;e: 14px; vertical-align: top; display: block; Margin: 0 auto; max-width: 640px; width: 640px;">
+                              <div class="content" style="box-sizing: border-box; display: block; Margin: 0 auto; max-width: 640px;">
+
+                                <!-- START CENTERED WHITE CONTAINER -->
+                                <span class="preheader" style="color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;">This is preheader text. Some clients will show this text as a preview.</span>
+                                  <table border="0" cellpadding="0" cellspacing="0" class="main" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; background: #ffffff; border-radius: 3px;">
+
+                                    <!-- START MAIN CONTENT AREA -->
+                                    <!-- <tr style="background-image: url(splash_welcome.png);background-size: cover;background-repeat:  repeat;"> -->
+                                      <tr>
+                                      <td class="wrapper" style="font-family:sans-serif;font-size: 14px; vertical-align: top; box-sizing: border-box; padding: 0px 0px 2px;">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;">
+                                          <tr>
+                                            <td style="font-family:sans-serif;font-size: 14px; vertical-align: top;text-align: center; background-color:rgba(165, 191, 216, 0.47);">
+                                              <p style="margin: 5px 0px; font-size: 35px; color: #1c274b;display: flex;align-items: center;justify-content: center;flex-direction: column;"><img src="home_logo.png" style="width: 111px;"> Stumbl </p>
+                                            </td>
+                                          </tr>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td class="wrapper" style="font-family:sans-serif;font-size: 14px; vertical-align: top; box-sizing: border-box; padding: 50px 50px 0px;">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;">
+                                          <tr>
+                                            <td style="font-family:sans-serif;font-size: 15px; vertical-align: top;text-align: center;">
+                                                <p class="tick-image" style="width: 100%;text-align: center; margin:0; "><img src="email.png" width="200px"></p>
+                                              <p style="font-family: "Nunito", sans-serif;line-height: 65px;font-weight: 500;font-size: 30px; margin: 0; Margin-bottom: 0px; letter-spacing: .3px; text-align: center;color: #000;">One Time OTP</p>
+                                            </td>
+                                          </tr>
+                                        </table>
+                                      </td>
+                                    </tr>
+                                    <!-- <tr class=""><td style="text-align:center;background-image: url(ic_receipt_corners.svg);background-size: 2% 145%;background-repeat:  repeat;"><img src="email_banner.jpg" style="opacity: 1;width: 300px"></td></tr> -->
+                                    <tr>
+                                      <td class="wrapper" style="font-family:sans-serif;font-size: 14px; vertical-align: top; box-sizing: border-box; padding: 12px 40px 20px; text-align: center;">
+                                        <p style="font-family:sans-serif;ont-size: 22px;">Hi, '.$userData['name'].'</p>
+                                        <p style="font-size: 16px;line-height:26px;vertical-align: top; box-sizing: border-box; margin-top: 0;color: #000">Your one time OTP number <span class="otpnum" style="font-size: 18px;font-weight: bold;">'.$user->verificationcode.'</span> has been receved<br>  Do not share the OTP with anyone </p>
+                                        <!-- <p style="font-size: 14px;font-family:sans-serif;ertical-align: top; box-sizing: border-box;">You only have X more days to go until you earn your next bonus of X coins.</p> -->
+                                        <!-- <p style="padding: 20px 0px;margin: 0px;"><button class="confirm-email" style="border-radius: 2px;background-color: #199ad6;border: none;color: #fff;padding: 12px 20px;font-size: 20px; cursor: pointer;">Confirm Your Email</button></p> -->
+                                      </td>
+                                    </tr>
+                                  </table>
+                                  <table style="width: 100%; background-color:#1c274b;">
+                                    <tbody>
+                                      <tr>
+                                        <td style="text-align: center;padding: 5px 0px;">
+                                          <!-- <p style="font-size: 13px;color: #A8B0B6;margin: 6px 0;">Gloriazone is committed to helping people who are here to make the world a better place to live.</p> -->
+                                          <p style="font-size: 13px;color: #fff;margin: 6px 0;"><a href="#" style="font-size: 13px;color: #fff;margin: 5px 0;">Privacy Policy</a> </p>
+                                          <p style="font-size: 13px;color: #fff;margin: 8px 0;">Copyright 2019 Stumbl for all. All rights reserved. </p>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                          </tr>
+                        </table>
+                      </body>
+                    </html>
+                    ');
+                    return $this->_success($user->verificationcode,'forgot','Please check your mail. Follow the link we mailed you to reset your StumbL password');
+                }else{
+                    return $this->_error('You are deactivated.please contact to admin.');
+                }
+            }else{
+                return $this->_error('This email does not exist in our database.');
+            }
+        }else{
+            return $this->_error('Email Id is required.');
+        }
+    }
+
+    public function resendCode(){
+        $this->autoRender = false;
+        if($this->request->getData('email')!=''){
+            $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+            if($userData){
+                if($userData['status']==1){
+                    $user = $this->sendotp($userData['id']);
+                    // $email = new Email('default');
+                    // $email->from(['me@example.com' => 'My Site'])
+                    // ->to('osvinphp@gmail.com')
+                    // ->setSubject('Forgot Password')
+                    // ->send($user->verificationcode);
+                    return $this->_success($user->verificationcode,'resend','We have mailed you a code again!');
+                }else{
+                    return $this->_error('You are deactivated.please contact to admin.');
+                }
+            }else{
+                return $this->_error('This email does not exist in our database.');
+            }
+        }else{
+            return $this->_error('Email Id is required.');
+        }
+    }
+
+
+    public function verifyCode(){
+        $this->autoRender = false;
+        if($this->request->getData('email')!='' AND $this->request->getData('code')!='' AND $this->request->getData('type')!=''){
+            $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+            if($userData){
+                if($userData['status']==1){
+                    if($userData['verificationcode']==$this->request->getData('code')){
+                        $user = $this->Users->get($userData['id']);
+                        $user->verificationcode='';
+                        if($this->request->getData('type')==1){
+                            $user->is_verified = 2;
+                        }
+                        $this->Users->save($user);
+                        return $this->_success($userData['verificationcode'],'verify','Account verified successfully');
+                    }else{
+                        return $this->_error('Please enter the correct code');
+                    }
+                }else{
+                    return $this->_error('You are deactivated.please contact to admin.');
+                }
+            }else{
+                return $this->_error('This email does not exist in our database.');
+            }
+        }else{
+            return $this->_error('All fields required.');
+        }
+    }
+
+    public function resetPassword(){
+        $this->autoRender = false;
+        if($this->request->getData('email')!='' AND $this->request->getData('password')!=''){
+            $userData = $this->Users->find()->where(['email'=>$this->request->getData('email')])->enableHydration(false)->first();
+            if($userData){
+                if($userData['status']==1){
+                        $user = $this->Users->get($userData['id']);
+                        $user = $this->Users->patchEntity($user, $this->request->getData());
+                        $this->Users->save($user);
+                        return $this->_success('','reset','Password reseted successfully');
+                }else{
+                    return $this->_error('You are deactivated.please contact to admin.');
+                }
+            }else{
+                return $this->_error('This email does not exist in our database.');
+            }
+        }else{
+            return $this->_error('All fields required.');
+        }
+    }
+
+    public function createProfile(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('name')!='' AND $this->request->getData('gender')!='' AND $this->request->getData('dob')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $user = $this->Users->get($this->request->getData('userid'));
+                $user = $this->Users->patchEntity($user, $this->request->getData());
+                $user->updated_at  = date('Y-m-d h:i:s');
+                if ($this->Users->save($user)) {
+                    $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user->id])->first();
+                    if($profile){
+                        $user['profile']=$profile['picture'];
+                    }else{
+                         $user['profile']='';
+                    }
+                    $user->dob = date('Y-m-d',strtotime($user->dob));
+                   return $this->_success($user,'profile','Profile Updated successfully');
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function album(){
+        $this->autoRender = false;
+        if($this->request->getData('userid') !='' AND $this->request->getData('picture')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                if($this->request->getData('is_profile') == 1){
+                    $query = $this->Albums->query();
+                    $query->update()->set(['is_profile' => 0])->where(['userid'=>$this->request->getData('userid')])->execute();
+                }
+                $count = $this->Albums->find('All')->select(['count'=>'count(id)'])->where(['userid'=>$this->request->getData('userid')])->first();
+                if($count['count']<9){
+                    $album = $this->Albums->newEntity();
+                    $album = $this->Albums->patchEntity($album, $this->request->getData());
+                    if($this->request->getData('picture')['name']!=''){
+                        $fileName = str_replace(' ','',$this->request->getData('picture')['name']);
+                        $uploaddir = WWW_ROOT.'/img/album/';
+                        $uploadfile = $uploaddir .str_replace(' ','',basename($_FILES['picture']['name']));
+                        if (move_uploaded_file($_FILES['picture']['tmp_name'], $uploadfile)) {
+                            $album->picture=Router::fullBaseUrl().'/stumbldb/img/album/'.$fileName;
+                        } else {
+                            $album->picture= '';
+                        }
+                    }
+                    $album->is_profile=$this->request->getData('is_profile');
+                    $album->created=date('Y-m-d h:i:s');
+                    // print_r($album->is_profile);die;
+                    if($this->Albums->save($album)){
+                        return $this->_success($album,'album','Image added in album successfully.');
+                    }
+                    if($album->errors()){
+                        return $this->_error($this->_dataerrors($album->errors()));
+                    }
+                }else{
+                     return $this->_error('You have already added 9 pictures.');
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function setPreferences(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('interest_in')!='' AND $this->request->getData('min_age')!='' AND $this->request->getData('max_age')!='' AND $this->request->getData('radius')!='' AND $this->request->getData('location')!='' AND $this->request->getData('lat')!='' AND $this->request->getData('lng')!=''){
+            $isexists = $this->Interests->find()->select('id')->where(['userid'=>$this->request->getData('userid')])->first();
+            $get_loaction_by_user_id = $this->HistoryLocations->find()->select('id')->where(['userid'=>$this->request->getData('userid')])->toArray();
+            if(!empty($get_loaction_by_user_id)){
+                if(count($get_loaction_by_user_id) > 4){
+                    $getIdToDelete = $this->HistoryLocations->find()->select('id')->where(['userid' => $this->request->getData('userid')])->order(['id' => 'ASC'])->first();
+                    $deleteHistoryLocations = $this->HistoryLocations->get($getIdToDelete['id']);
+                    $deleteHistoryLocationsResult = $this->HistoryLocations->delete($deleteHistoryLocations);
+                }
+                $checkUniqueLocation = $this->HistoryLocations->find()->select('id')->where(['userid'=>$this->request->getData('userid'),'lat'=>$this->request->getData('lat'),'lng'=>$this->request->getData('lng')])->toArray();
+                if(empty($checkUniqueLocation)){
+                    $HistoryLocations = $this->HistoryLocations->newEntity();
+                    $HistoryLocations = $this->HistoryLocations->patchEntity($HistoryLocations, $this->request->getData());
+                    $HistoryLocations->location = $this->request->getData('location');
+                    $HistoryLocations->lat = $this->request->getData('lat');
+                    $HistoryLocations->lng = $this->request->getData('lng');
+                    $HistoryLocations->userid = $this->request->getData('userid');
+                    $this->HistoryLocations->save($HistoryLocations);
+                }
+            }else{
+                $HistoryLocations = $this->HistoryLocations->newEntity();
+                $HistoryLocations = $this->HistoryLocations->patchEntity($HistoryLocations, $this->request->getData());
+                $HistoryLocations->location = $this->request->getData('location');
+                $HistoryLocations->lat = $this->request->getData('lat');
+                $HistoryLocations->lng = $this->request->getData('lng');
+                $HistoryLocations->userid = $this->request->getData('userid');
+                $this->HistoryLocations->save($HistoryLocations);
+            }
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $isexists = $this->Interests->find()->select('id')->where(['userid'=>$this->request->getData('userid')])->first();
+                if($isexists){
+                   $interests = $this->Interests->get($isexists['id']);
+                    $interests = $this->Interests->patchEntity($interests, $this->request->getData());
+                    $interests->created=date('Y-m-d h:i:s');
+                    if($this->Interests->save($interests)){
+                        $user = $this->Users->get($this->request->getData('userid'));
+                        $user = $this->Users->patchEntity($user, $this->request->getData());
+                        if ($this->Users->save($user)) {
+                            $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user->id])->first();
+                            if($profile){
+                                $interests['profile']=$profile['picture'];
+                            }else{
+                                 $interests['profile']='';
+                            }
+                           return $this->_success($interests,'preferences','Preferences setted successfully.');
+                        }
+                    }
+                }else{
+                    $interests = $this->Interests->newEntity();
+                    $interests = $this->Interests->patchEntity($interests, $this->request->getData());
+                    $interests->created=date('Y-m-d h:i:s');
+                    if($this->Interests->save($interests)){
+                        $user = $this->Users->get($this->request->getData('userid'));
+                        $user = $this->Users->patchEntity($user, $this->request->getData());
+                        if ($this->Users->save($user)) {
+                            $profile = $this->Albums->find()->select('picture')->where(['userid'=>$user->id])->first();
+                            if($profile){
+                                $interests['profile']=$profile['picture'];
+                            }else{
+                                 $interests['profile']='';
+                            }
+                           return $this->_success($interests,'preferences','Preferences setted successfully.');
+                        }
+                    }
+                    if($interests->errors()){
+                        return $this->_error($this->_dataerrors($interests->errors()));
+                    }
+                }
+            }else{
+                return $this->_error('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function getLocationHistory(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' ){
+            $getLocationHistory = $this->HistoryLocations->find()->select(['id','userid','lat','location','lng','date_created'])->where(['userid'=>$this->request->getData('userid')])->toArray();
+            if(!empty($getLocationHistory)){
+                return $this->_success($getLocationHistory,'getLocationHistory','Location History.');
+            }else{
+                return $this->_error('No location history found');
+            }
+        }
+    }
+
+    public function logout(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' ){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+               if($this->Auth->logout()){
+                    $query = $this->Logins->query();
+                    $query->update()->set(['status' => 2])->where(['userid'=>$this->request->getData('userid')])->execute();
+                    return $this->_success('','logout','User logout successfully.');
+               }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('User Id is required.');
+        }
+    }
+
+
+    public function deleteAccount(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' ){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $this->Logins->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->Users->deleteAll(['id' => $this->request->getData('userid')]);
+                $this->Feedbacks->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->Interests->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->Thumblock->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->UsersMoods->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->Albums->deleteAll(['userid' => $this->request->getData('userid')]);
+                $this->AlbumPermissions->deleteAll(['OR'=>['userid' => $this->request->getData('userid'),'requesterid'=>$this->request->getData('userid')]]);
+                $this->BlockedUsers->deleteAll(['OR'=>['fromid' => $this->request->getData('userid'),'toid'=>$this->request->getData('userid')]]);
+                // $query = $this->Logins->query();
+                // $query->update()->set(['status' => 2])->where(['userid'=>$this->request->getData('userid')])->execute();
+                // $query = $this->Users->query();
+                // $query->update()->set(['status' => 2])->where(['id'=>$this->request->getData('userid')])->execute();
+                return $this->_success('','delete','User account deleted successfully.');
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('User Id is required.');
+        }
+    }
+
+    public function settings(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('notification')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $user = $this->Users->get($this->request->getData('userid'));
+                $user = $this->Users->patchEntity($user, $this->request->getData());
+                $user->updated_at  = date('Y-m-d h:i:s');
+                if ($this->Users->save($user)) {
+                    $user->dob = date('Y-m-d',strtotime($user->dob));
+                    if($this->request->getData('notification')==1){
+                        return $this->_success($user,'settings','Notification enabled.');
+                    }else{
+                        return $this->_success($user,'settings','Notification disabled.');
+                    }
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function checkEmail(){
+        $this->autoRender = false;
+        if($this->request->getData('email')!=''){
+            $user = $this->Users->find('All')->where(['email'=>$this->request->getData('email')])->first();
+            if($user){
+                return $this->_success('','checkemail','This email is already registered');
+            }else{
+                return $this->_error('Email does not exists.');
+            }
+        }
+        else{
+            return $this->_error('Email is required.');
+        }
+    }
+
+
+    public function removeAlbum(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('pictureid')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $album = $this->Albums->find('All')->where(['userid'=>$this->request->getData('userid'),'id'=>$this->request->getData('pictureid')])->first();
+                if($album){
+                    $entity = $this->Albums->get($this->request->getData('pictureid'));
+                    $result = $this->Albums->delete($entity);
+                    return $this->_success('','removeAlbum','Picture removed successfully from album.');
+                }else{
+                    return $this->_error('Picture is not available.');
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('User Id is required.');
+        }
+    }
+
+    public function addThumblock(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('devicetype')!='' && $this->request->getData('deviceid')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $usersdetails = $this->Thumblock->find()->where(['deviceid'=>$this->request->getData('deviceid'),'devicetype'=>$this->request->getData('devicetype')])->first();
+                print_r($usersdetails);die;
+                if(!$usersdetails){
+                    $thumblock = $this->Thumblock->newEntity();
+                    $thumblock = $this->Thumblock->patchEntity($thumblock,$this->request->getData());
+                    $thumblock->updated  = date('Y-m-d h:i:s');
+                    if($this->Thumblock->save($thumblock)){
+                         return $this->_success('','thumblock','Fingerprint enabled successfully.');
+                    }
+                }else if($usersdetails['status']==2){
+                     return $this->_error('Fingerprint disabled for this device.');
+                }else{
+                     return $this->_error('Fingerprint already enabled for this device.');
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function thumblockStatus(){
+                               $this->autoRender = false;
+                               if($this->request->getData('userid')!='' AND $this->request->getData('devicetype')!='' && $this->request->getData('deviceid')!='' && $this->request->getData('status')!=''){
+                               $data = $this->token();
+                               if($data->sub==$this->request->getData('userid')){
+                               $isexists = $this->Thumblock->find()->where(['deviceid'=>$this->request->getData('deviceid'),'devicetype'=>$this->request->getData('devicetype')])->first();
+                               // print_r($isexists);die;
+                               if($isexists['userid']==$this->request->getData('userid') OR !$isexists){
+                               $usersdetails = $this->Thumblock->find()->where(['userid'=>$this->request->getData('userid'),'deviceid'=>$this->request->getData('deviceid'),'devicetype'=>$this->request->getData('devicetype')])->first();
+                               if(!$usersdetails){
+                               $thumblock = $this->Thumblock->newEntity();
+                               $thumblock = $this->Thumblock->patchEntity($thumblock,$this->request->getData());
+                               $thumblock->updated  = date('Y-m-d h:i:s');
+                               if($this->Thumblock->save($thumblock)){
+                               return $this->_success('','thumblockStatus','Fingerprint enabled successfully.');
+                               }
+                               }else if($this->request->getData('status')==1){
+                               if($usersdetails['status']==2){
+                               $thumblock = $this->Thumblock->get($usersdetails['id']);
+                               $thumblock = $this->Thumblock->patchEntity($thumblock,$this->request->getData());
+                               $thumblock->updated  = date('Y-m-d h:i:s');
+                               if($this->Thumblock->save($thumblock)){
+                               return $this->_success('','thumblockStatus','Fingerprint enabled successfully.');
+                               }
+                               }
+                               return $this->_error('Thumb lock already enabled for this device.');
+                               }else if($this->request->getData('status')==2){
+                               if($usersdetails['status']==1){
+                               $thumblock = $this->Thumblock->get($usersdetails['id']);
+                               $thumblock = $this->Thumblock->patchEntity($thumblock,$this->request->getData());
+                               $thumblock->updated  = date('Y-m-d h:i:s');
+                               if($this->Thumblock->save($thumblock)){
+                               return $this->_success('','thumblockStatus','Fingerprint disabled successfully.');
+                               }
+                               }
+                               return $this->_error('Fingerprint already disabled for this device.');
+                               }else{
+                               $$thumblock = $this->Thumblock->get($usersdetails['id']);
+                               $thumblock = $this->Thumblock->patchEntity($thumblock,$this->request->getData());
+                               $thumblock->updated  = date('Y-m-d h:i:s');
+                               if($this->Thumblock->save($thumblock)){
+                               return $this->_success('','thumblockStatus','Fingerprint enabled successfully.');
+                               }
+                               }else{
+                               return $this->_error('Fingerprint is enabled by another user for this device.');
+                               }
+                               }else{
+                               return $this->_errorunauth('Unauthorized access.');
+                               }
+                               }
+                               else{
+                               return $this->_error('All fields are required.');
+                               }
+                               }
+
+    public function editAlbum(){
+        $this->autoRender = false;
+        if($this->request->getData('userid')!='' AND $this->request->getData('pictureid')!='' AND $this->request->getData('picture')!='' AND $this->request->getData('status')!=''){
+            $data = $this->token();
+            if($data->sub==$this->request->getData('userid')){
+                $album = $this->Albums->find('All')->where(['userid'=>$this->request->getData('userid'),'id'=>$this->request->getData('pictureid')])->first();
+                if($album){
+                    $album = $this->Albums->get($this->request->getData('pictureid'));
+                    $album = $this->Albums->patchEntity($album, $this->request->getData());
+                    if($this->request->getData('picture')['name']!=''){
+                        $fileName = str_replace(' ','',$this->request->getData('picture')['name']);
+                        $uploaddir = WWW_ROOT.'/img/album/';
+                        $uploadfile = $uploaddir .str_replace(' ','',basename($_FILES['picture']['name']));
+                        if (move_uploaded_file($_FILES['picture']['tmp_name'], $uploadfile)) {
+                            $album->picture=Router::fullBaseUrl().'/stumbldb/img/album/'.$fileName;
+                        } else {
+                            $album->picture= '';
+                        }
+                    }
+                    if($this->request->getData('is_profile') == 1){
+                        $query = $this->Albums->query();
+                        $query->update()->set(['is_profile' => 0])->where(['userid'=>$this->request->getData('userid')])->execute();
+                    }
+                    $album->created=date('Y-m-d h:i:s');
+                    $album->is_profile=$this->request->getData('is_profile');
+                    if($this->Albums->save($album)){
+                        return $this->_success($album,'album','Image added in album successfully.');
+                    }
+                    if($album->errors()){
+                        return $this->_error($this->_dataerrors($album->errors()));
+                    }
+                }else{
+                    return $this->_error('Picture is not available.');
+                }
+            }else{
+                return $this->_errorunauth('Unauthorized access.');
+            }
+        }
+        else{
+            return $this->_error('All fields are required.');
+        }
+    }
+
+    public function test()
+    {
+        $album = $this->Albums->find()->select(['id'=>'MAX(id)'])->group('userid')->toArray();
+
+        foreach ($album as $key => $value) {
+            $query = $this->Albums->query();
+            $query->update()->set(['is_profile' => 1])->where(['id'=>$value['id']])->execute();
+
+            //$result[] = $value['id'];
+        }
+        echo "done";
+        //echo json_encode($result);
+    }
+
+}

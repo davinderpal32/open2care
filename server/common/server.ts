@@ -7,6 +7,7 @@ import os from 'os';
 import cookieParser from 'cookie-parser';
 import swaggerify from './swagger';
 import l from './logger';
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -24,10 +25,29 @@ export default class ExpressServer {
     swaggerify(app, routes);
     return this;
   }
-
   listen(p: string | number = process.env.PORT): Application {
-    const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
-    http.createServer(app).listen(p, welcome(p));
-    return app;
+    const {
+   MONGO_USER,
+   MONGO_PASSWORD,
+   MONGO_PATH,
+   } = process.env;
+
+    try {// I added this extra check
+        console.log('setting client');
+        mongoose.Promise = global.Promise;
+        //const uri = "mongodb+srv://renuyadav:@renuyadav1@cluster0-d0ihi.mongodb.net/test?retryWrites=true";
+        var client = mongoose.connect(`${MONGO_PATH}`,{ useNewUrlParser: true },function(err, db){
+          console.log(db);
+        });
+
+        const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
+        http.createServer(app).listen(p, welcome(p));
+        console.log(app);
+        return app;
+    } catch(error) {
+      console.log('error during connecting to mongo: ');
+      console.error(error);
+    }
+
   }
 }

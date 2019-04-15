@@ -1,5 +1,6 @@
 import express from 'express';
 import controller from './controller'
 export default express.Router()
-    .get('/', controller.getUser)
-    .post('/', controller.addUser);
+    .post('/', controller.create)
+    .get('/', controller.all)
+    .get('/:id', controller.byId);
