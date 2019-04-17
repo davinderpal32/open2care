@@ -1,6 +1,17 @@
 import Promise from 'bluebird';
 import L from '../../common/logger'
+import mongoose from "mongoose";
+//interfaces
+import { IUser } from "../../interfaces/user"; //import IUser
 
+//models
+import { IModel } from "../../models/model"; //import IModel
+import { IUserModel } from "../../models/users"; //import IUserModel
+
+//schemas
+import { UserSchema } from "../../schemas/user"; //import userSchema
+var db = mongoose.connection;
+var User: mongoose.Model<IUserModel> = db.model<IUserModel>("User", UserSchema);
 let id = 0;
 interface Users {
   id: number,
@@ -14,6 +25,7 @@ const users: Users[] = [
 
 export class UsersService {
   all(): Promise<Users[]> {
+    console.log('dbconnect:',db);
     L.info(users, 'fetch all users');
     return Promise.resolve(users);
   }

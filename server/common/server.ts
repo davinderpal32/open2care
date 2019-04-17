@@ -25,33 +25,22 @@ export default class ExpressServer {
     swaggerify(app, routes);
     return this;
   }
-  listen(p: string | number = process.env.PORT): Application {
-    const {
-   MONGO_USER,
-   MONGO_PASSWORD,
-   MONGO_PATH,
-   } = process.env;
 
-    try {// I added this extra check
-        console.log('setting client');
+  listen(p: string | number = process.env.PORT): Application {
+    
+    try {
         mongoose.Promise = global.Promise;
-        //const uri = "mongodb+srv://renuyadav:@renuyadav1@cluster0-d0ihi.mongodb.net/test?retryWrites=true";
-        var client = mongoose.connect(`${MONGO_PATH}`,{ useNewUrlParser: true });
+        var client = mongoose.connect(`${process.env.MONGO_PATH}`,{ useNewUrlParser: true });
 
         var db = mongoose.connection;
-        db.on('error', console.error.bind(console, 'connection error:'));
-        console.log("h1");
         db.once('open', function callback () {
           console.log("h");
         });
-        console.log('client', client);
 
         const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
         http.createServer(app).listen(p, welcome(p));
-        //console.log(client);
         return app;
     } catch(error) {
-      console.log('error during connecting to mongo: ');
       console.error(error);
     }
 
