@@ -14,10 +14,10 @@ export class Controller {
   }
 
   create(req: Request, res: Response): void {
-    UsersService.create(req.body.name).then(r =>
+    UsersService.create(req.body).then(r =>
       res
         .status(201)
-        .location(`<%= apiRoot %>/examples/${r.id}`)
+        .location(`<%= apiRoot %>/examples/`)
         .json(r),
     );
   }

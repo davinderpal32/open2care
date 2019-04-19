@@ -9,6 +9,7 @@ import swaggerify from './swagger';
 import l from './logger';
 import mongoose from "mongoose";
 
+
 const app = express();
 
 export default class ExpressServer {
@@ -21,6 +22,9 @@ export default class ExpressServer {
     app.use(express.static(`${root}/public`));
   }
 
+  
+
+  
   router(routes: (app: Application) => void): ExpressServer {
     swaggerify(app, routes);
     return this;
@@ -30,7 +34,7 @@ export default class ExpressServer {
     
     try {
         mongoose.Promise = global.Promise;
-        var client = mongoose.connect(`${process.env.MONGO_PATH}`,{ useNewUrlParser: true });
+        mongoose.connect(`${process.env.MONGO_PATH}`,{ useNewUrlParser: true });
 
         var db = mongoose.connection;
         db.once('open', function callback () {
