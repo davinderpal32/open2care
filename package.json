@@ -12,6 +12,7 @@
     "test:debug": "mocha --inspect-brk test/**/*.ts --exit"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "bluebird": "^3.5.3",
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.4",
@@ -19,10 +20,14 @@
     "express": "^4.16.4",
     "express-jwt": "^5.3.1",
     "express-jwt-authz": "^2.3.1",
+    "joi": "^14.3.1",
+    "joigoose": "^4.0.5",
     "jwks-rsa": "^1.4.0",
     "migrate-mongoose-typescript": "^3.3.4",
+    "moment": "^2.24.0",
     "mongodb": "^3.2.3",
     "mongoose": "^5.5.1",
+    "mongoose-hidden": "^1.6.1",
     "npm-build": "0.0.1",
     "pino": "^5.11.1",
     "q": "^1.5.1",

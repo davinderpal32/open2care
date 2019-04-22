@@ -7,6 +7,8 @@ basePath: /api/v1
 tags:
   - name: Users
     description: Users CRUD operations
+  - name: Auth
+    description: Authentication operations
 
 consumes:
   - application/json
@@ -33,6 +35,27 @@ definitions:
       lastName:
         type: string
         example: test
+  AuthBody:
+    type: object
+    title: auth
+    required:
+      - email
+      - firstName
+      - lastName
+      - password
+    properties:
+      email:
+        type: string
+        example: example@gmail.com
+      firstName:
+        type: string
+        example: test
+      lastName:
+        type: string
+        example: test
+      password:
+        type: string
+        example: test@123
 
 paths:
   
@@ -91,5 +114,24 @@ paths:
           description: Return the user with the specified id
         404:
           description: User not found
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      description: Create a new example
+      parameters:
+        - name: email
+        - name: firstName
+        - name: lastName
+        - name: password
+          in: body
+          description: an users
+          required: true
+          schema:
+            $ref: "#/definitions/AuthBody"
+      responses:
+        200:
+          description: Returns all users
 
 

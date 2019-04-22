@@ -38,7 +38,7 @@ export default class ExpressServer {
 
         var db = mongoose.connection;
         db.once('open', function callback () {
-          console.log("h");
+          //console.log("h");
         });
 
         const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
