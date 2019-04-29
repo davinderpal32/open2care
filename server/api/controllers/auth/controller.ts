@@ -3,8 +3,36 @@ import { Request, Response } from 'express';
 
 export class Controller {
  
-  register(req: Request, res: Response): void {
-    AuthService.create(req.body).then(r =>
+  careCenterRegister(req: Request, res: Response): void {
+    AuthService.careCenterRegister(req.body).then(r =>
+      res
+        .status(201)
+        .header("Access-Control-Allow-Origin", "*")
+        .location(`<%= apiRoot %>/auth/`)
+        .json(r),
+    );
+  }
+  login(req: Request, res: Response): void {
+    AuthService.login(req.body).then(r =>
+      res
+        .status(201)
+        .header("Access-Control-Allow-Origin", "*")
+        .location(`<%= apiRoot %>/auth/`)
+        .json(r),
+    );
+  }
+  forgetPassword(req: Request, res: Response): void {
+
+    var data = {url: req.headers.host,email:req.params.email }
+        AuthService.forgetPassword(data).then(r => {
+      if (r) res.json(r);
+      else res.status(404).end();
+    });
+  }
+  resetPassword(req: Request, res: Response): void {
+    var data = {authorization: req.headers.Authorization, 
+    body:req.body};
+    AuthService.resetPassword(data).then(r =>
       res
         .status(201)
         .location(`<%= apiRoot %>/auth/`)

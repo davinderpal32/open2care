@@ -37,7 +37,7 @@ definitions:
         example: test
   AuthBody:
     type: object
-    title: auth
+    title: register
     required:
       - email
       - firstName
@@ -55,7 +55,37 @@ definitions:
         example: test
       password:
         type: string
-        example: test@123
+        example: Test123
+  AuthLogin:
+    type: object
+    title: login
+    required:
+      - email
+      - password
+      - role
+    properties:
+      email:
+        type: string
+        example: example@gmail.com
+      password:
+        type: string
+        example: Test123
+      role:
+        type: string
+        enum: ["admin", "patient", "carecenter"]
+  AuthReset:
+    type: object
+    title: forgetPassword
+    required:
+      - oldPassword
+      - newPassword
+    properties:
+      oldPassword:
+        type: string
+        example: Test123
+      newPassword:
+        type: string
+        example: Test12345
 
 paths:
   
@@ -76,9 +106,6 @@ paths:
         - name: email
         - name: firstName
         - name: lastName
-          in: body
-          description: an users
-          required: true
           schema:
             $ref: "#/definitions/UsersBody"
       responses:
@@ -115,23 +142,71 @@ paths:
         404:
           description: User not found
 
-  /auth/register:
+  /auth/careCenterRegister:
     post:
       tags:
         - Auth
-      description: Create a new example
+      description: Create a new care center
       parameters:
-        - name: email
-        - name: firstName
-        - name: lastName
-        - name: password
+        - name: params
           in: body
-          description: an users
-          required: true
           schema:
             $ref: "#/definitions/AuthBody"
       responses:
         200:
-          description: Returns all users
+          description: carecenter details with token
+        404:
+          description: Somthing went wrong
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      description: user login
+      parameters:
+        - name: params
+          in: body
+          schema:
+            $ref: "#/definitions/AuthLogin"
+      responses:
+        200:
+          description: Returns user
+        404:
+          description: Somthing went wrong
+  /auth/forgetPassword/{email}:
+    get:
+      tags:
+        - Auth
+      parameters:
+        - name: email
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: send mail for reset password
+        404:
+          description: User not found
+  /auth/resetPassword:
+    put:
+      tags:
+        - Auth
+      description: user password reset
+      parameters:
+        - name: params
+          in: body
+          schema:
+            $ref: "#/definitions/AuthReset"
+        - name: Authorization
+          in: header
+          description: an Authorization header
+          required: true
+          type: string
+      responses:
+        200:
+          description: Returns user
+        404:
+          description: Somthing went wrong
+        
+
 
 
