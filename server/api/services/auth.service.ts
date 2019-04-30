@@ -1,13 +1,6 @@
-//import Promise from 'bluebird';
-import mongoose from "mongoose";
-//interfaces
-import { IUser } from '../../interfaces/user'; //import IUser
-import { IUserModel } from "../../models/users"; //import IUserModel
-
-import { UserSchema } from '../../schemas/user'; //import userSchema
-var db = mongoose.connection;
-var User: mongoose.Model<IUserModel> = db.model<IUserModel>("User", UserSchema);
 import axios from 'axios';
+import { Users } from "../../../models";
+import  GenerateToken  from '../../generateToken';
 import { getMaxListeners } from "cluster";
 const NodeRSA = require('node-rsa');
 const key = new NodeRSA({b: 512});
@@ -18,73 +11,50 @@ export class AuthService {
  
     async careCenterRegister(data: any){
         data.role = "carecenter";
-        let user: IUser = data;
         //create user and return promise
         try{
-            var response = await User.findOne({ email: data.email });
-            if(response){
+            // get result if email already exists
+            var responses = await Users.count({where:{ email: data.email }},{ plain: true }).then( (result) => {return(result)  } );
+            if(responses > 0) {                
                 let response = {
                     data: '',
-                    error: "Email already exists.",
+                    message: "Email already exists.",
+                    error: true
                 }
                 return Promise.resolve(response);
             }
-                var users =  await new User(user).save();
-                var userToken = await axios.post('https://dev-680f7trh.auth0.com/oauth/token', {
-                    headers: { 'content-type': 'application/json' },
-                    client_id:"3CV6uO45d6WYrG2IJiSkan674GSIfouV",
-                    client_secret:"V9OMLXiwrwo2mDy-_FW0K1ia5_LNnjG-g565nRtQEsq7QyOdY9SsHMS03eLvxM4d",
-                    audience:"https://dev-680f7trh.auth0.com/api/v2/",
-                    grant_type:"client_credentials",
-                    sub: users.id 
-                })
-                .then(function (response) {
-                    users['token'] = response.data.access_token;
-                    return Promise.resolve(response.data.access_token);
-                });
-
+                var users =  await Users.create(data);               // insert carecenter data
+                data.centerId = users.id;
+                var userToken = await GenerateToken.generate(users.id);        // generate auth token
                 let userInfo = {
                     data: users,
-                    token: userToken,
-                    error: null
+                   token: userToken,
+                    error: false
                 }
                 return userInfo;
             }
             catch(error) {
-                console.log(error);
-                
                 let response = {
                     data: '',
-                    error: error.message,
+                    message: error.message,
+                    error: true
                 }
                 return Promise.resolve(response);
             }
       }
 
       async login (data: any){
-        let user: IUser = data;
+        //let user: IUser = data;
         try{
             const text = 'Hello RSA!';
             const encrypted = key.encrypt(text, 'base64');
             console.log('encrypted: ', encrypted);
             const decrypted = key.decrypt(encrypted, 'utf8');
             console.log('decrypted: ', decrypted);
-            var usersdetail =  await User.findOne({'email':data.email,'role':data.role});
+            var usersdetail =  await Users.findOne({'email':data.email,'role':data.role});
             if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
-                var userToken = await axios.post('https://dev-680f7trh.auth0.com/oauth/token', {
-                    headers: { 'content-type': 'application/json' },
-                    client_id:"3CV6uO45d6WYrG2IJiSkan674GSIfouV",
-                    client_secret:"V9OMLXiwrwo2mDy-_FW0K1ia5_LNnjG-g565nRtQEsq7QyOdY9SsHMS03eLvxM4d",
-                    audience:"https://dev-680f7trh.auth0.com/api/v2/",
-                    grant_type:"client_credentials",
-                    sub: usersdetail.id,
-                    exp: 28800
-                })
-                .then(function (response) {
-                    usersdetail['token'] = response.data.access_token;
-                    return Promise.resolve(response.data.access_token);
-                });
-
+               
+                var userToken = await GenerateToken.generate(usersdetail.id);
                 let userInfo = {
                     data: usersdetail,
                     token: userToken,
@@ -112,7 +82,7 @@ export class AuthService {
       async forgetPassword (data: any){
         //let user: IUser = email;
         try{
-            var usersdetail =  await User.findOne({'email':data.email});
+            var usersdetail =  await Users.findOne({'email':data.email});
             if(usersdetail){
                 var token = key.encrypt(data.email, 'base64');
                 let transporter = nodemailer.createTransport({

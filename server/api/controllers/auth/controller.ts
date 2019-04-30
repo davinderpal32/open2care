@@ -4,21 +4,29 @@ import { Request, Response } from 'express';
 export class Controller {
  
   careCenterRegister(req: Request, res: Response): void {
-    AuthService.careCenterRegister(req.body).then(r =>
-      res
-        .status(201)
-        .header("Access-Control-Allow-Origin", "*")
-        .location(`<%= apiRoot %>/auth/`)
-        .json(r),
-    );
+    AuthService.careCenterRegister(req.body).then(r =>{
+      if(r.error == false){
+        res
+          .status(200)
+          .header("Access-Control-Allow-Origin", "*")
+          .location(`<%= apiRoot %>/auth/`)
+          .json(r);
+      }else{
+        res
+          .status(400)
+          .header("Access-Control-Allow-Origin", "*")
+          .location(`<%= apiRoot %>/auth/`)
+          .json(r).end();
+      }
+    });
   }
   login(req: Request, res: Response): void {
     AuthService.login(req.body).then(r =>
       res
-        .status(201)
+        .status(200)
         .header("Access-Control-Allow-Origin", "*")
         .location(`<%= apiRoot %>/auth/`)
-        .json(r),
+        .json(r), 
     );
   }
   forgetPassword(req: Request, res: Response): void {

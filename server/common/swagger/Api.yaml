@@ -40,19 +40,27 @@ definitions:
     title: register
     required:
       - email
+      - userName
       - firstName
       - lastName
+      - phoneNumber
       - password
     properties:
       email:
         type: string
         example: example@gmail.com
+      userName:
+        type: string
+        example: test
       firstName:
         type: string
         example: test
       lastName:
         type: string
         example: test
+      phoneNumber:
+        type: number
+        example: 9876543210
       password:
         type: string
         example: Test123
