@@ -1,26 +1,28 @@
-const NodeRSA = require('node-rsa');
 const Bcrypt = require("bcryptjs");
 import { Users } from "../../../models";
+var jwt = require('jsonwebtoken');
 
-export class loginService {
+export class resetService {
  
-      async login (data: any){
+      async reset (data: any){
         try{
-          var usersdetail =  await Users.findOne({where:{email:data.email, role:'admin'}}).then(project => {
+           let token = jwt.verify(data.token, 'secret');
+          var usersdetail =  await Users.findOne({where:{id:token.data}}).then(project => {
             if(project)
             return project.get();
           });          
-            if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
+            if(usersdetail){
+                
                 let userInfo = {
                     data: usersdetail,
-                    message: "Login successfully.",
+                    message: "Data found.",
                     error: false
                 }
                 return userInfo;
             }else{
                 let response = {
                     data: '',
-                    message: "wrong email or password.",
+                    message: "This link is expired.",
                     error: true
                 }
                 return Promise.resolve(response);
@@ -35,6 +37,7 @@ export class loginService {
             return Promise.resolve(response);
         }
       }
+
 }
 
-export default new loginService();
+export default new resetService();

@@ -7,7 +7,7 @@ import os from 'os';
 import cookieParser from 'cookie-parser';
 import swaggerify from './swagger';
 import l from './logger';
-const Sequelize = require('sequelize');
+// const Sequelize = require('sequelize');
 // import mongoose from "mongoose";
 
 
@@ -34,10 +34,10 @@ export default class ExpressServer {
     
     try {
 
-      let abc = new Sequelize('`${process.env.DATABASE}`', '`${process.env.USER}`', '`${process.env.PASSWORD}`',{host: 'localhost',dialect: 'mysql'});
-      if(abc){
-        console.log("connection established...");
-      }
+      // let abc = new Sequelize('`${process.env.DATABASE}`', '`${process.env.USER}`', '`${process.env.PASSWORD}`',{host: 'localhost',dialect: 'mysql'});
+      // if(abc){
+      //   console.log("connection established...");
+      // }
         const welcome = port => () => l.info(`up and running in ${process.env.NODE_ENV || 'development'} @: ${os.hostname() } on port: ${port}}`);
         http.createServer(app).listen(p, welcome(p));
         return app;

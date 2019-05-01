@@ -1,12 +1,9 @@
-import axios from 'axios';
-import { Users } from "../../../models";
+import { Users, MedicalServices , MedicalcenterInfo } from "../../../models";
 import  GenerateToken  from '../../generateToken';
-import { getMaxListeners } from "cluster";
+import  emailConfig  from '../../emailconfig';
 const NodeRSA = require('node-rsa');
 const key = new NodeRSA({b: 512});
 const Bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
-
 export class AuthService {
  
     async careCenterRegister(data: any){
@@ -25,9 +22,11 @@ export class AuthService {
             }
                 var users =  await Users.create(data);               // insert carecenter data
                 data.centerId = users.id;
-                var userToken = await GenerateToken.generate(users.id);        // generate auth token
+                var service =  await MedicalServices.create(data);    // insert service data
+                var info =  await MedicalcenterInfo.create(data);        // insert info data
+                var userToken = await GenerateToken.generate(users.id);     // generate auth token
                 let userInfo = {
-                    data: users,
+                    data: {person: users, service:service ,info: info},
                    token: userToken,
                     error: false
                 }
@@ -46,12 +45,16 @@ export class AuthService {
       async login (data: any){
         //let user: IUser = data;
         try{
-            const text = 'Hello RSA!';
-            const encrypted = key.encrypt(text, 'base64');
-            console.log('encrypted: ', encrypted);
-            const decrypted = key.decrypt(encrypted, 'utf8');
-            console.log('decrypted: ', decrypted);
-            var usersdetail =  await Users.findOne({'email':data.email,'role':data.role});
+            // const text = 'Hello RSA!';
+            // const encrypted = key.encrypt(text, 'base64');
+            // console.log('encrypted: ', encrypted);
+            const role = key.decrypt(data.role, 'utf8');
+            var usersdetail =  await Users.findOne({where:{email: data.email,role: data.role}}).then(project => {
+                if(project)
+                return project.get();
+               });
+            //    console.log(usersdetail);
+               
             if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
                
                 var userToken = await GenerateToken.generate(usersdetail.id);
@@ -80,28 +83,23 @@ export class AuthService {
       }
 
       async forgetPassword (data: any){
-        //let user: IUser = email;
         try{
-            var usersdetail =  await Users.findOne({'email':data.email});
+           
+            var usersdetail =  await Users.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
+                if(project)
+                return project.get();
+               });      //return result for email id
             if(usersdetail){
-                var token = key.encrypt(data.email, 'base64');
-                let transporter = nodemailer.createTransport({
-                    host: 'smtp.gmail.com',
-                    port: 465,
-                    secure: true, // true for 465, false for other ports
-                    auth: {
-                      user: 'osvinphp@gmail.com', // generated ethereal user
-                      pass: 'Ukr@inDev' // generated ethereal password
-                    }
-                  });
-                
-                  // send mail with defined transport object
+                let token = await GenerateToken.generate(usersdetail.id);
+                let link = data.url+'/reset/'+token;
+                console.log(link);
+                let transporter = await emailConfig.config();     // call transport configurations.
                   let info = await transporter.sendMail({
                     from: '"Open2Care" <foo@example.com>', // sender address
                     to: "osvinphp@gmail.com", // list of receivers
                     subject: "Forget Password (Open2Care)", // Subject line
                     text: "Hello world?", // plain text body
-                    html: "<b>"+data.url+'/reset/'+token+"</b>" // html body
+                    html: "<b><a href='"+link+"'>Click here to reset your password</a></b>" // html body
                   });
                   let userInfo = {
                     data: "",

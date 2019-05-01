@@ -31,7 +31,7 @@ export class Controller {
   }
   forgetPassword(req: Request, res: Response): void {
 
-    var data = {url: req.headers.host,email:req.params.email }
+    var data = {url: req.headers.host,data:req.body }
         AuthService.forgetPassword(data).then(r => {
       if (r) res.json(r);
       else res.status(404).end();

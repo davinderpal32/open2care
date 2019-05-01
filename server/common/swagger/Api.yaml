@@ -1,12 +1,10 @@
 swagger: "2.0"
 info:
   version: 1.0.0
-  title: musicApp
-  description: This is Music app for api
+  title: open2care
+  description: Apis for open2care
 basePath: /api/v1
 tags:
-  - name: Users
-    description: Users CRUD operations
   - name: Auth
     description: Authentication operations
 
@@ -17,24 +15,6 @@ produces:
 
 
 definitions:
-  
-  UsersBody:
-    type: object
-    title: users
-    required:
-      - email
-      - firstName
-      - lastName
-    properties:
-      email:
-        type: string
-        example: example@gmail.com
-      firstName:
-        type: string
-        example: test
-      lastName:
-        type: string
-        example: test
   AuthBody:
     type: object
     title: register
@@ -45,6 +25,19 @@ definitions:
       - lastName
       - phoneNumber
       - password
+      - serviceName
+      - cost
+      - approxTime
+      - appointmentTime
+      - centerName
+      - centerType
+      - centerPhoneNumber
+      - address1
+      - city
+      - state
+      - zipCode
+      - businessDays
+      - insuranceAccepted
     properties:
       email:
         type: string
@@ -64,6 +57,51 @@ definitions:
       password:
         type: string
         example: Test123
+      serviceName:
+        type: string
+        example: Test
+      cost:
+        type: number
+        example: 30
+      approxTime:
+        type: number
+        example: 30
+      appointmentTime:
+        type: string
+        example: Test
+      centerName:
+        type: string
+        example: Test
+      centerType:
+        type: string
+        enum: ['Urgent Care', 'Dentist', 'Primary Care']
+      licenseNumber:
+        type: string
+        example: Test
+      centerPhoneNumber:
+        type: number
+        example: 9876543210
+      address1:
+        type: string
+        example: Test
+      address2:
+        type: string
+        example: Test
+      city:
+        type: string
+        example: Test
+      state:
+        type: string
+        example: Test
+      zipCode:
+        type: number
+        example: 100101
+      businessDays:
+        type: string
+        example: Test
+      insuranceAccepted:
+        type: string
+        example: Test
   AuthLogin:
     type: object
     title: login
@@ -80,7 +118,7 @@ definitions:
         example: Test123
       role:
         type: string
-        enum: ["admin", "patient", "carecenter"]
+        enum: ["carecenter", "patient", "admin" ]
   AuthReset:
     type: object
     title: forgetPassword
@@ -94,61 +132,21 @@ definitions:
       newPassword:
         type: string
         example: Test12345
+  Authforget:
+    type: object
+    title: forgetPassword
+    required:
+      - email
+      - role
+    properties:
+      email:
+        type: string
+        example: example@gmail.com
+      role:
+        type: string
+        enum: ["carecenter", "patient", "admin" ]
 
 paths:
-  
-
-  /users:
-    get:
-      tags:
-        - Users
-      description: Fetch all users
-      responses:
-        200:
-          description: Returns all users
-    post:
-      tags:
-        - Users
-      description: Create a new example
-      parameters:
-        - name: email
-        - name: firstName
-        - name: lastName
-          schema:
-            $ref: "#/definitions/UsersBody"
-      responses:
-        200:
-          description: Returns all users
-
-  /users/{id}:
-    get:
-      tags:
-        - Users
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the user to retrieve
-          type: string
-      responses:
-        200:
-          description: Return the user with the specified id
-        404:
-          description: User not found
-    delete:
-      tags:
-        - Users
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the user to delete
-          type: string
-      responses:
-        200:
-          description: Return the user with the specified id
-        404:
-          description: User not found
 
   /auth/careCenterRegister:
     post:
@@ -180,15 +178,15 @@ paths:
           description: Returns user
         404:
           description: Somthing went wrong
-  /auth/forgetPassword/{email}:
-    get:
+  /auth/forgetPassword:
+    post:
       tags:
         - Auth
       parameters:
-        - name: email
-          in: path
-          required: true
-          type: string
+        - name: param
+          in: body
+          schema:
+            $ref: "#/definitions/Authforget"
       responses:
         200:
           description: send mail for reset password
