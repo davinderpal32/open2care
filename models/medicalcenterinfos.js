@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     centerId: {
       type: DataTypes.INTEGER,
       references: {
-          model: 'Users',
+          model: 'Carecenter',
           key: 'id'
       },
       onUpdate: 'cascade',
@@ -16,14 +16,17 @@ module.exports = (sequelize, DataTypes) => {
     },
     centerType: {
       allowNull: false,
-      type: DataTypes.ENUM('Urgent Care', 'Dentist', 'Primary Care'),
-      defaultValue: 'Urgent Care'
+      type: DataTypes.INTEGER,
     },
     licenseNumber: {
       allowNull: true,
       type: DataTypes.STRING
     },
     centerPhoneNumber: {
+      allowNull: false,
+      type: DataTypes.INTEGER
+    },
+    waitingTime: {
       allowNull: false,
       type: DataTypes.INTEGER
     },
@@ -47,21 +50,17 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING
     },
+    latitude: {
+      allowNull: true,
+      type: DataTypes.STRING
+    },
+    longitude: {
+      allowNull: true,
+      type: DataTypes.STRING
+    },
     businessDays: {
       allowNull: false,
       type: DataTypes.STRING
-    },
-    insuranceAccepted: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
     }
   }, {});
   MedicalcenterInfo.associate = function(models) {

@@ -1,36 +1,23 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('MedicalServices', {
+    return queryInterface.createTable('CarecenterService', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      centerId: {
+      carecenterTypeId:  {
         type: Sequelize.INTEGER,
         references: {
-            model: 'Users',
+            model: 'Carecenter',
             key: 'id'
         },
         onUpdate: 'cascade',
         onDelete: 'cascade'
       },
       serviceName: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      cost: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
-      approxTime: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
-      appointmentTime: {
-        allowNull: false,
         type: Sequelize.STRING
       },
       createdAt: {
@@ -44,6 +31,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('MedicalServices');
+    return queryInterface.dropTable('CarecenterService');
   }
 };

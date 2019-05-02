@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Users', {
+    return queryInterface.createTable('Carecenter', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -27,20 +27,17 @@ module.exports = {
         type: Sequelize.STRING
       },
       phoneNumber: {
+        allowNull: false,
         type: Sequelize.STRING
       },
       role: {
         type: Sequelize.STRING
       },
-      deviceType: {
+      speciality: {
         allowNull: true,
         type: Sequelize.STRING
       },
-      deviceId: {
-        allowNull: true,
-        type: Sequelize.STRING
-      },
-      pushToken: {
+      resettoken: {
         allowNull: true,
         type: Sequelize.STRING
       },
@@ -55,6 +52,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Users');
+    return queryInterface.dropTable('Carecenter');
   }
 };

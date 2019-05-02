@@ -20,8 +20,8 @@ export class Controller {
       }
     });
   }
-  login(req: Request, res: Response): void {
-    AuthService.login(req.body).then(r =>
+  careCenterlogin(req: Request, res: Response): void {
+    AuthService.careCenterlogin(req.body).then(r =>
       res
         .status(200)
         .header("Access-Control-Allow-Origin", "*")

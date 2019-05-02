@@ -16,29 +16,13 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'cascade',
       onDelete: 'cascade'
     },
-    serviceName: {
+    serviceId: {
       allowNull: false,
-      type: DataTypes.STRING
+      type: DataTypes.INTEGER
     },
     cost: {
       allowNull: false,
       type: DataTypes.INTEGER
-    },
-    approxTime: {
-      allowNull: false,
-      type: DataTypes.INTEGER
-    },
-    appointmentTime: {
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
     }
   }, {});
   MedicalServices.associate = function(models) {

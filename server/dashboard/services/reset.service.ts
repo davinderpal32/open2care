@@ -7,22 +7,34 @@ export class resetService {
       async reset (data: any){
         try{
            let token = jwt.verify(data.token, 'secret');
-          var usersdetail =  await Users.findOne({where:{id:token.data}}).then(project => {
-            if(project)
-            return project.get();
-          });          
-            if(usersdetail){
-                
-                let userInfo = {
-                    data: usersdetail,
-                    message: "Data found.",
-                    error: false
+           if(data.post.password == data.post.conpassword){
+                var usersdetail =  await Users.findOne({where:{id:token.data}}).then(project => {
+                    if(project){
+                        return project.update({password: data.post.password}).then(function () {
+                            return project.get();
+                        });
+                    }
+                    
+                });          
+                if(usersdetail){
+                    let userInfo = {
+                        data: usersdetail,
+                        message: "Data found.",
+                        error: false
+                    }
+                    return userInfo;
+                }else{
+                    let response = {
+                        data: '',
+                        message: "This link is expired.",
+                        error: true
+                    }
+                    return Promise.resolve(response);
                 }
-                return userInfo;
             }else{
                 let response = {
                     data: '',
-                    message: "This link is expired.",
+                    message: "Password and confirm password does not matched.",
                     error: true
                 }
                 return Promise.resolve(response);

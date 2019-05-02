@@ -4,6 +4,6 @@ import { checkJwt } from '../../../middleware/login';
 
 export default express.Router()
     .post('/careCenterRegister' , controller.careCenterRegister)
-    .post('/login' , controller.login)
+    .post('/careCenterlogin' , controller.careCenterlogin)
     .post('/forgetPassword' ,controller.forgetPassword )
     .put('/resetPassword', checkJwt , controller.resetPassword);

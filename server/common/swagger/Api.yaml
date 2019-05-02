@@ -25,10 +25,9 @@ definitions:
       - lastName
       - phoneNumber
       - password
-      - serviceName
+      - serviceId
       - cost
-      - approxTime
-      - appointmentTime
+      - waitingTime
       - centerName
       - centerType
       - centerPhoneNumber
@@ -37,7 +36,8 @@ definitions:
       - state
       - zipCode
       - businessDays
-      - insuranceAccepted
+      - latitude
+      - longitude
     properties:
       email:
         type: string
@@ -57,30 +57,21 @@ definitions:
       password:
         type: string
         example: Test123
-      serviceName:
-        type: string
-        example: Test
-      cost:
-        type: number
-        example: 30
-      approxTime:
-        type: number
-        example: 30
-      appointmentTime:
-        type: string
-        example: Test
       centerName:
         type: string
         example: Test
       centerType:
-        type: string
-        enum: ['Urgent Care', 'Dentist', 'Primary Care']
+        type: number
+        example: 2
       licenseNumber:
         type: string
         example: Test
       centerPhoneNumber:
         type: number
         example: 9876543210
+      waitingTime:
+        type: number
+        example: 30
       address1:
         type: string
         example: Test
@@ -93,15 +84,24 @@ definitions:
       state:
         type: string
         example: Test
+      longitude:
+        type: number
+        example: 67899
+      latitude:
+        type: number
+        example: 8789
       zipCode:
         type: number
         example: 100101
       businessDays:
         type: string
         example: Test
-      insuranceAccepted:
+      serviceId:
         type: string
         example: Test
+      cost:
+        type: number
+        example: 30
   AuthLogin:
     type: object
     title: login
@@ -154,6 +154,9 @@ paths:
         - Auth
       description: Create a new care center
       parameters:
+        - name: image
+          in: formData
+          type: file
         - name: params
           in: body
           schema:
@@ -163,7 +166,7 @@ paths:
           description: carecenter details with token
         404:
           description: Somthing went wrong
-  /auth/login:
+  /auth/careCenterlogin:
     post:
       tags:
         - Auth

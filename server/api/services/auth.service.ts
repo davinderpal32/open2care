@@ -1,4 +1,4 @@
-import { Users, MedicalServices , MedicalcenterInfo } from "../../../models";
+import { Carecenter, MedicalServices , MedicalcenterInfo } from "../../../models";
 import  GenerateToken  from '../../generateToken';
 import  emailConfig  from '../../emailconfig';
 const NodeRSA = require('node-rsa');
@@ -11,16 +11,16 @@ export class AuthService {
         //create user and return promise
         try{
             // get result if email already exists
-            var responses = await Users.count({where:{ email: data.email }},{ plain: true }).then( (result) => {return(result)  } );
+            var responses = await Carecenter.count({where:{ userName: data.userName }},{ plain: true }).then( (result) => {return(result)  } );
             if(responses > 0) {                
                 let response = {
                     data: '',
-                    message: "Email already exists.",
+                    message: "Username already exists.",
                     error: true
                 }
                 return Promise.resolve(response);
             }
-                var users =  await Users.create(data);               // insert carecenter data
+                var users =  await Carecenter.create(data);               // insert carecenter data
                 data.centerId = users.id;
                 var service =  await MedicalServices.create(data);    // insert service data
                 var info =  await MedicalcenterInfo.create(data);        // insert info data
@@ -42,18 +42,17 @@ export class AuthService {
             }
       }
 
-      async login (data: any){
+      async careCenterlogin (data: any){
         //let user: IUser = data;
         try{
             // const text = 'Hello RSA!';
             // const encrypted = key.encrypt(text, 'base64');
             // console.log('encrypted: ', encrypted);
             const role = key.decrypt(data.role, 'utf8');
-            var usersdetail =  await Users.findOne({where:{email: data.email,role: data.role}}).then(project => {
+            var usersdetail =  await Carecenter.findOne({where:{userName: data.userName,role: data.role}}).then(project => {
                 if(project)
                 return project.get();
                });
-            //    console.log(usersdetail);
                
             if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
                
@@ -84,11 +83,17 @@ export class AuthService {
 
       async forgetPassword (data: any){
         try{
-           
-            var usersdetail =  await Users.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
+           if(data.data.role!='patient'){
+            var usersdetail =  await Carecenter.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
                 if(project)
                 return project.get();
                });      //return result for email id
+            }else{
+                var usersdetail =  await Carecenter.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
+                    if(project)
+                    return project.get();
+                   }); 
+            }
             if(usersdetail){
                 let token = await GenerateToken.generate(usersdetail.id);
                 let link = data.url+'/reset/'+token;

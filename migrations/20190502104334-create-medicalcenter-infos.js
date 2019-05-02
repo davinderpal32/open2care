@@ -11,7 +11,7 @@ module.exports = {
       centerId: {
         type: Sequelize.INTEGER,
         references: {
-            model: 'Users',
+            model: 'Carecenter',
             key: 'id'
         },
         onUpdate: 'cascade',
@@ -23,14 +23,23 @@ module.exports = {
       },
       centerType: {
         allowNull: false,
-        type: Sequelize.ENUM('Urgent Care', 'Dentist', 'Primary Care'),
-        defaultValue: 'Urgent Care'
+        type: Sequelize.INTEGER,
+        references: {
+            model: 'CarecenterType',
+            key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
       },
       licenseNumber: {
         allowNull: true,
         type: Sequelize.STRING
       },
       centerPhoneNumber: {
+        allowNull: false,
+        type: Sequelize.INTEGER
+      },
+      waitingTime: {
         allowNull: false,
         type: Sequelize.INTEGER
       },
@@ -54,11 +63,15 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING
       },
-      businessDays: {
-        allowNull: false,
+      latitude: {
+        allowNull: true,
         type: Sequelize.STRING
       },
-      insuranceAccepted: {
+      longitude: {
+        allowNull: true,
+        type: Sequelize.STRING
+      },
+      businessDays: {
         allowNull: false,
         type: Sequelize.STRING
       },
