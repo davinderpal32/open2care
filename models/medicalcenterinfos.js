@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     centerId: {
       type: DataTypes.INTEGER,
       references: {
-          model: 'Carecenter',
+          model: 'Carecenters',
           key: 'id'
       },
       onUpdate: 'cascade',
@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     centerPhoneNumber: {
       allowNull: false,
-      type: DataTypes.INTEGER
+      type: DataTypes.STRING
     },
     waitingTime: {
       allowNull: false,

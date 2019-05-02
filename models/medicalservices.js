@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     centerId: {
       type: DataTypes.INTEGER,
       references: {
-          model: 'Users',
+          model: 'Carecenters',
           key: 'id'
       },
       onUpdate: 'cascade',

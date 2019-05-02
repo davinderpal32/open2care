@@ -97,8 +97,8 @@ definitions:
         type: string
         example: Test
       serviceId:
-        type: string
-        example: Test
+        type: number
+        example: 1
       cost:
         type: number
         example: 30
@@ -106,13 +106,13 @@ definitions:
     type: object
     title: login
     required:
-      - email
+      - userName
       - password
       - role
     properties:
-      email:
+      userName:
         type: string
-        example: example@gmail.com
+        example: test
       password:
         type: string
         example: Test123
@@ -215,7 +215,16 @@ paths:
           description: Returns user
         404:
           description: Somthing went wrong
-        
+  /service:
+    get:
+      tags:
+        - Auth
+      description: Create a new care center
+      responses:
+        200:
+          description: carecenter details with token
+        404:
+          description: Somthing went wrong      
 
 
 

@@ -11,7 +11,7 @@ module.exports = {
       centerId: {
         type: Sequelize.INTEGER,
         references: {
-            model: 'Carecenter',
+            model: 'Carecenters',
             key: 'id'
         },
         onUpdate: 'cascade',
@@ -21,7 +21,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
-            model: 'CarecenterService',
+            model: 'CarecenterServices',
             key: 'id'
         },
         onUpdate: 'cascade',

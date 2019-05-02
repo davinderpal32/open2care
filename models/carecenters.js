@@ -2,14 +2,13 @@
 const bcrypt = require("bcryptjs");
 
 module.exports = (sequelize, DataTypes) => {
-  const Carecenter = sequelize.define('Carecenter', {
+  const Carecenter = sequelize.define('Carecenters', {
     password: DataTypes.STRING,
     userName: DataTypes.STRING,
     email: DataTypes.STRING,
     firstName: DataTypes.STRING,
     lastName: DataTypes.STRING,
     phoneNumber: DataTypes.STRING,
-    picture: DataTypes.STRING,
     speciality: DataTypes.STRING,
     resettoken: DataTypes.STRING,
     role: DataTypes.STRING
