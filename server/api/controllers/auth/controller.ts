@@ -1,24 +1,30 @@
 import AuthService from '../../services/auth.service';
 import { Request, Response } from 'express';
+import carecenterValidate from "../../../../validations/carecenters";
 
 export class Controller {
  
-  careCenterRegister(req: Request, res: Response): void {
-    AuthService.careCenterRegister(req.body).then(r =>{
-      if(r.error == false){
-        res
-          .status(200)
-          .header("Access-Control-Allow-Origin", "*")
-          .location(`<%= apiRoot %>/auth/`)
-          .json(r);
-      }else{
-        res
-          .status(400)
-          .header("Access-Control-Allow-Origin", "*")
-          .location(`<%= apiRoot %>/auth/`)
-          .json(r).end();
-      }
-    });
+  async careCenterRegister( req: Request, res: Response ){
+    const validates = await carecenterValidate.validate(req.body); 
+    if(validates){
+      res.json(validates);
+    }else{
+      AuthService.careCenterRegister(req.body).then(r =>{
+        if(r.error == false){
+          res
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r);
+        }else{
+          res
+            .status(400)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r).end();
+        }
+      });
+    }
   }
   careCenterlogin(req: Request, res: Response): void {
     AuthService.careCenterlogin(req.body).then(r =>

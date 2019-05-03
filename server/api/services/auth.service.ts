@@ -1,4 +1,4 @@
-import { Carecenters, MedicalServices , MedicalcenterInfo } from "../../../models";
+import { Carecenters, MedicalServices , MedicalcenterInfo , Patients } from "../../../models";
 import  GenerateToken  from '../../generateToken';
 import  emailConfig  from '../../emailconfig';
 const NodeRSA = require('node-rsa');
@@ -48,24 +48,21 @@ export class AuthService {
         //create user and return promise
         try{
             console.log(data);
-            // get result if email already exists
-            // var responses = await Carecenters.count({where:{ userName: data.userName }},{ plain: true }).then( (result) => {return(result)  } );
-            // if(responses > 0) {                
-            //     let response = {
-            //         data: '',
-            //         message: "Username already exists.",
-            //         error: true
-            //     }
-            //     return Promise.resolve(response);
-            // }
-            //     var users =  await Carecenters.create(data);               // insert carecenter data
-            //     data.centerId = users.id;
-            //     var service =  await MedicalServices.create(data);    // insert service data
-            //     var info =  await MedicalcenterInfo.create(data);        // insert info data
-            //     var userToken = await GenerateToken.generate(users.id);     // generate auth token
+           // get result if email already exists
+            var responses = await Patients.count({where:{ email: data.email }},{ plain: true }).then( (result) => {return(result)  } );
+            if(responses > 0) {                
+                let response = {
+                    data: '',
+                    message: "Email already exists.",
+                    error: true
+                }
+                return Promise.resolve(response);
+            }
+                var users =  await Patients.create(data);               // insert carecenter data
+                var userToken = await GenerateToken.generate(users.id);     // generate auth token
                 let userInfo = {
-                    //data: {person: users, service:service ,info: info},
-                   //token: userToken,
+                    data: users,
+                   token: userToken,
                     error: false
                 }
                 return userInfo;
@@ -81,7 +78,6 @@ export class AuthService {
       }
 
       async careCenterlogin (data: any){
-        //let user: IUser = data;
         try{
             // const text = 'Hello RSA!';
             // const encrypted = key.encrypt(text, 'base64');
