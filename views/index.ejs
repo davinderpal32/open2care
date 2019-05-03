@@ -1,39 +1,59 @@
-<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link rel="stylesheet" type="text/css" href="stylesheets/style.css">
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-<!------ Include the above in your HEAD tag ---------->
+<!DOCTYPE html>
+<html lang="en">
 
-<div class="container">
-        <div id="login-row" class="row justify-content-center align-items-center">
-            <div id="login-column" class="col-md-6">
-            <h1>Open2Care</h1>
-            	<h2>LOGIN</h2>
-              <%= message%>
-                <div class="box">
-                    <div class="shape1"></div>
-                    <div class="shape2"></div>
-                    <div class="shape3"></div>
-                    <div class="shape4"></div>
-                    <div class="shape5"></div>
-                    <div class="shape6"></div>
-                    <div class="shape7"></div>
-                    <div class="float">
-                        <form class="form" action="" method="post">
-                            <div class="form-group">
-                                <label for="username" class="text-white">Email:</label><br>
-                                <input type="email" name="email" id="username" class="form-control" placeholder="Enter your email">
+
+<!-- Mirrored from gull-laravel.ui-lib.com/sessions/signIn by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 07 Feb 2019 05:43:47 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Gull - Laravel + Bootstrap 4 admin template</title>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/styles/css/themes/lite-purple.min.css">
+</head>
+
+<body>
+    <div class="auth-layout-wrap" style="background-image: url(../assets/images/photo-wide-4.jpg)">
+        <div class="auth-content">
+            <div class="card o-hidden">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="p-4">
+                            <div class="auth-logo text-center mb-4">
+                                <img src="../assets/images/logo.png" alt="">
                             </div>
-                            <div class="form-group">
-                                <label for="password" class="text-white">Password:</label><br>
-                                <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password">
+                            <h1 class="mb-3 text-18">Sign In</h1>
+                            <%= message%>
+                            <form class="form" action="" method="post">
+                                <div class="form-group">
+                                    <label for="username" class="text-white">Email:</label><br>
+                                    <input type="email" name="email" id="username" class="form-control" placeholder="Enter your email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="password" class="text-white">Password:</label><br>
+                                    <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password">
+                                </div>
+                                <div class="form-group">
+                                    <input type="submit" name="submit" class="btn btn-info btn-md" value="submit">
+                                </div>
+                            </form>
+
+                            <div class="mt-3 text-center">
+                                <a href="forgot-2.html" class="text-muted"><u>Forgot Password?</u></a>
                             </div>
-                            <div class="form-group">
-                                <input type="submit" name="submit" class="btn btn-info btn-md" value="submit">
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="../assets/js/common-bundle-script.js"></script>
+
+    <script src="../assets/js/script.js"></script>
+</body>
+
+
+<!-- Mirrored from gull-laravel.ui-lib.com/sessions/signIn by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 07 Feb 2019 05:44:22 GMT -->
+</html>

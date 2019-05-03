@@ -1,12 +1,12 @@
 const NodeRSA = require('node-rsa');
 const Bcrypt = require("bcryptjs");
-import { Carecenters } from "../../../models";
+import { CarecenterServices } from "../../../models";
 
-export class loginService {
+export class settingsService {
  
-      async login (data: any){
+      async addservices (data: any){
         try{
-          var usersdetail =  await Carecenters.findOne({where:{email:data.email, role:'admin'}}).then(project => {
+          var usersdetail =  await CarecenterServices.findOne({where:{email:data.email, role:'admin'}}).then(project => {
             if(project)
             return project.get();
           });          
@@ -37,4 +37,4 @@ export class loginService {
       }
 }
 
-export default new loginService();
+export default new settingsService();
