@@ -1,10 +1,12 @@
 import loginService from '../services/login.service';
+import settingsService from '../services/settings.service';
 import { Request, Response } from 'express';
 
-export class loginController {
+export class settingsController {
  
-  login(req: Request, res: Response): void {
-    loginService.login(req.body).then(r =>{
+  index(req: Request, res: Response): void {
+    
+    settingsService.addservices(req.body).then(r =>{
       if(r.error == false){
         res.render('dashboard',{message: 'Login successfully'});
       }else{
@@ -13,4 +15,4 @@ export class loginController {
     });
   }
 }
-export default new loginController();
+export default new settingsController();

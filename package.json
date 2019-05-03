@@ -12,6 +12,7 @@
     "test:debug": "mocha --inspect-brk test/**/*.ts --exit"
   },
   "dependencies": {
+    "@types/express-session": "^1.15.12",
     "array.filter": "^0.1.6",
     "axios": "^0.18.0",
     "bcryptjs": "^2.4.3",
@@ -24,6 +25,7 @@
     "express-joi-validator": "^2.0.1",
     "express-jwt": "^5.3.1",
     "express-jwt-authz": "^2.3.1",
+    "express-session": "^1.16.1",
     "joi": "^14.3.1",
     "joi-sequelize": "^0.2.8",
     "joigoose": "^4.0.5",
@@ -50,7 +52,8 @@
     "sequelize-typescript": "^1.0.0-alpha.9",
     "string_decoder": "^1.2.0",
     "swagger-express-middleware": "^2.0.1",
-    "swagger-express-ts": "^1.0.1"
+    "swagger-express-ts": "^1.0.1",
+    "ts-session": "^1.1.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
