@@ -6,4 +6,5 @@ export default express.Router()
     .post('/careCenterRegister' , controller.careCenterRegister)
     .post('/careCenterlogin' , controller.careCenterlogin)
     .post('/forgetPassword' ,controller.forgetPassword )
-    .put('/resetPassword', checkJwt , controller.resetPassword);
+    .put('/resetPassword', checkJwt , controller.resetPassword)
+    .post('/patientRegister' , controller.patientRegister);

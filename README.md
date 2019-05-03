@@ -6,10 +6,13 @@ Open2Care provide list of nearby care center and doctors
 
 Get started developing...
 
+
 ```shell
 # install deps
 npm install
 
+#create copy of .env.example and update configuration variables
+cp .env.example .env
 # run in development mode
 npm run dev
 

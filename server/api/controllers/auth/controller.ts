@@ -29,6 +29,24 @@ export class Controller {
         .json(r), 
     );
   }
+
+  patientRegister(req: Request, res: Response): void {
+    AuthService.patientRegister(req.body).then(r =>{
+      if(r.error == false){
+        res
+          .status(200)
+          .header("Access-Control-Allow-Origin", "*")
+          .location(`<%= apiRoot %>/auth/`)
+          .json(r);
+      }else{
+        res
+          .status(400)
+          .header("Access-Control-Allow-Origin", "*")
+          .location(`<%= apiRoot %>/auth/`)
+          .json(r).end();
+      }
+    });
+  }
   forgetPassword(req: Request, res: Response): void {
 
     var data = {url: req.headers.host,data:req.body }
