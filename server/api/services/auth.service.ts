@@ -41,6 +41,44 @@ export class AuthService {
                 return Promise.resolve(response);
             }
       }
+    
+    
+      async patientRegister(data: any){
+        data.role = "patient";
+        //create user and return promise
+        try{
+            console.log(data);
+            // get result if email already exists
+            // var responses = await Carecenters.count({where:{ userName: data.userName }},{ plain: true }).then( (result) => {return(result)  } );
+            // if(responses > 0) {                
+            //     let response = {
+            //         data: '',
+            //         message: "Username already exists.",
+            //         error: true
+            //     }
+            //     return Promise.resolve(response);
+            // }
+            //     var users =  await Carecenters.create(data);               // insert carecenter data
+            //     data.centerId = users.id;
+            //     var service =  await MedicalServices.create(data);    // insert service data
+            //     var info =  await MedicalcenterInfo.create(data);        // insert info data
+            //     var userToken = await GenerateToken.generate(users.id);     // generate auth token
+                let userInfo = {
+                    //data: {person: users, service:service ,info: info},
+                   //token: userToken,
+                    error: false
+                }
+                return userInfo;
+            }
+            catch(error) {
+                let response = {
+                    data: '',
+                    message: error.message,
+                    error: true
+                }
+                return Promise.resolve(response);
+            }
+      }
 
       async careCenterlogin (data: any){
         //let user: IUser = data;
