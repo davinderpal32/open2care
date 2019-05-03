@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
+const JoiSequelize = require('joi-sequelize');
 const basename = path.basename(__filename);
 // const env = process.env.NODE_ENV || 'development';
 // const config = require(__dirname + '/../.env')[env];
@@ -23,6 +24,7 @@ fs
   .forEach(file => {
     const model = sequelize['import'](path.join(__dirname, file));
     db[model.name] = model;
+    // db.JS[model.name] = new JoiSequelize(require(path.join(__dirname, file)));
   });
 
 Object.keys(db).forEach(modelName => {

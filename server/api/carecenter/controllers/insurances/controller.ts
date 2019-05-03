@@ -1,10 +1,10 @@
-import ServiceService from '../../services/service.services';
+import InsuranceService from '../../services/insurances.services';
 import { Request, Response } from 'express';
 
 export class Controller {
  
-  services(req: Request, res: Response): void {
-    ServiceService.get(req.params.id).then(r =>{
+  insurances(req: Request, res: Response): void {
+    InsuranceService.get(req.body).then(r =>{
       if(r.error == false){
         res
           .status(200)

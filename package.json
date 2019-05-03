@@ -25,6 +25,7 @@
     "express-jwt": "^5.3.1",
     "express-jwt-authz": "^2.3.1",
     "joi": "^14.3.1",
+    "joi-sequelize": "^0.2.8",
     "joigoose": "^4.0.5",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.4.0",

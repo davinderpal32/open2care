@@ -1,13 +1,13 @@
-import { CarecenterServices } from "../../../../models";
+import { CarecenterTypes } from "../../../../models";
 const NodeRSA = require('node-rsa');
 const key = new NodeRSA({b: 512});
 const Bcrypt = require("bcryptjs");
-export class ServiceService {
+export class InsuranceService {
  
     async get(data: any){
-        //get data of Carecenter services against particular type
+        //create user and return promise
         try{
-            var service =  await CarecenterServices.findAll({where: {carecenterTypeId: data}}).then(project => {
+            var service =  await CarecenterTypes.findAll().then(project => {
                 if(project)
                 return project;
                });
@@ -29,4 +29,4 @@ export class ServiceService {
 
 }
 
-export default new ServiceService();
+export default new InsuranceService();

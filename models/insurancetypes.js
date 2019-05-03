@@ -1,10 +1,10 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const InsuranceType = sequelize.define('InsuranceType', {
+  const InsuranceTypes = sequelize.define('InsuranceTypes', {
     name: DataTypes.STRING
   }, {});
-  InsuranceType.associate = function(models) {
+  InsuranceTypes.associate = function(models) {
     // associations can be defined here
   };
-  return InsuranceType;
+  return InsuranceTypes;
 };

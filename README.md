@@ -1,6 +1,6 @@
-# musicApp
+# Open2Care APIs
 
-Basic music app and apis
+Open2Care provide list of nearby care center and doctors
 
 ## Quick Start
 

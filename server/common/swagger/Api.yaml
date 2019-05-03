@@ -108,7 +108,6 @@ definitions:
     required:
       - userName
       - password
-      - role
     properties:
       userName:
         type: string
@@ -116,12 +115,9 @@ definitions:
       password:
         type: string
         example: Test123
-      role:
-        type: string
-        enum: ["carecenter", "patient", "admin" ]
   AuthReset:
     type: object
-    title: forgetPassword
+    title: resetPassword
     required:
       - oldPassword
       - newPassword
@@ -137,14 +133,13 @@ definitions:
     title: forgetPassword
     required:
       - email
-      - role
     properties:
       email:
         type: string
         example: example@gmail.com
       role:
         type: string
-        enum: ["carecenter", "patient", "admin" ]
+        enum: ["patient",""]
 
 paths:
 
@@ -215,16 +210,39 @@ paths:
           description: Returns user
         404:
           description: Somthing went wrong
-  /service:
+  /carecenterTypes:
     get:
       tags:
-        - Auth
-      description: Create a new care center
+        - Carecenter
+      description: Get care center's Types
       responses:
         200:
-          description: carecenter details with token
+          description: carecenter's Types list
         404:
-          description: Somthing went wrong      
+          description: Somthing went wrong 
+  /carecenterService/{id}:
+    get:
+      tags:
+        - Carecenter
+      description: Get care center's Services against carecenter type
+      parameters:
+        - name: id
+          in: path
+      responses:
+        200:
+          description: carecenter's services list
+        404:
+          description: Somthing went wrong 
+  /insurances:
+    get:
+      tags:
+        - Carecenter
+      description: Get care center's insurances
+      responses:
+        200:
+          description: carecenter's insurances list
+        404:
+          description: Somthing went wrong     
 
 
 

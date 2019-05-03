@@ -1,5 +1,5 @@
 const Bcrypt = require("bcryptjs");
-import { Users } from "../../../models";
+import { Carecenters } from "../../../models";
 var jwt = require('jsonwebtoken');
 
 export class resetService {
@@ -8,7 +8,7 @@ export class resetService {
         try{
            let token = jwt.verify(data.token, 'secret');
            if(data.post.password == data.post.conpassword){
-                var usersdetail =  await Users.findOne({where:{id:token.data}}).then(project => {
+                var usersdetail =  await Carecenters.findOne({where:{id:token.data.id}}).then(project => {
                     if(project){
                         return project.update({password: data.post.password}).then(function () {
                             return project.get();

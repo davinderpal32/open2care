@@ -1,10 +1,10 @@
-import ServiceService from '../../services/service.services';
+import TypeService from '../../services/types.services';
 import { Request, Response } from 'express';
 
 export class Controller {
  
-  services(req: Request, res: Response): void {
-    ServiceService.get(req.params.id).then(r =>{
+  types(req: Request, res: Response): void {
+    TypeService.get(req.body).then(r =>{
       if(r.error == false){
         res
           .status(200)

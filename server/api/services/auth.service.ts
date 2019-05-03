@@ -49,7 +49,7 @@ export class AuthService {
             // const encrypted = key.encrypt(text, 'base64');
             // console.log('encrypted: ', encrypted);
           //  const role = key.decrypt(data.role, 'utf8');
-            var usersdetail =  await Carecenters.findOne({where:{userName: data.userName,role: data.role}}).then(project => {
+            var usersdetail =  await Carecenters.findOne({where:{userName: data.userName}}).then(project => {
                 if(project)
                 return project.get();
                });
@@ -83,8 +83,8 @@ export class AuthService {
 
       async forgetPassword (data: any){
         try{
-           if(data.data.role!='patient'){
-            var usersdetail =  await Carecenters.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
+           if(data.data.role==''){
+            var usersdetail =  await Carecenters.findOne({where:{'email':data.data.email}}).then(project => {
                 if(project)
                 return project.get();
                });      //return result for email id
@@ -93,9 +93,19 @@ export class AuthService {
                     if(project)
                     return project.get();
                    }); 
+                   usersdetail.role = 'patient';
             }
             if(usersdetail){
-                let token = await GenerateToken.generate(usersdetail.id);
+                let token = await GenerateToken.generate({id: usersdetail.id,role: usersdetail.role});
+                if(data.data.role==''){
+                    var usersdetail =  await Carecenters.findOne({where:{id:usersdetail.id}}).then(project => {
+                        if(project){
+                            return project.update({resettoken: token}).then(function () {
+                                return project.get();
+                            });
+                        }                    
+                    });   
+                }
                 let link = data.url+'/reset/'+token;
                 console.log(link);
                 let transporter = await emailConfig.config();     // call transport configurations.
@@ -131,7 +141,6 @@ export class AuthService {
 
       async resetPassword (data: any){
         try{
-            // var usersdetail =  await User.findOne({'email':data.email});
             console.log(data);
         }
         catch(error) {
