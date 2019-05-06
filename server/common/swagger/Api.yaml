@@ -8,15 +8,15 @@ tags:
   - name: Auth
     description: Authentication operations
 
-consumes:
-  - application/json
+# consumes:
+#   - application/json
 produces:
   - application/json
 
 
 definitions:
   AuthBody:
-    type: object
+    type: formData
     title: register
     required:
       - email
@@ -152,10 +152,88 @@ paths:
         - name: image
           in: formData
           type: file
-        - name: params
-          in: body
-          schema:
-            $ref: "#/definitions/AuthBody"
+        - name: email
+          in: formData
+          type: string
+          # required: true
+        - name: userName
+          in: formData
+          type: string
+          # required: true
+        - name: password
+          in: formData
+          type: string
+          # required: true
+        - name: firstName
+          in: formData
+          type: string
+          # required: true
+        - name: lastName
+          in: formData
+          type: string
+          # required: true
+        - name: phoneNumber
+          in: formData
+          type: number
+          # required: true
+        - name: centerName
+          in: formData
+          type: string
+          # required: true
+        - name: centerType
+          in: formData
+          type: number
+          # required: true
+        - name: licenseNumber
+          in: formData
+          type: string
+        - name: centerPhoneNumber
+          in: formData
+          type: number
+          # required: true
+        - name: waitingTime
+          in: formData
+          type: number
+          # required: true
+        - name: address1
+          in: formData
+          type: string 
+          # required: true     
+        - name: address2
+          in: formData
+          type: string
+        - name: city
+          in: formData
+          type: string
+          # required: true
+        - name: state
+          in: formData
+          type: string
+          # required: true
+        - name: longitude
+          type: number
+          in: formData
+          # required: true
+        - name: latitude
+          type: number
+          in: formData
+          # required: true
+        - name: zipCode
+          type: number
+          in: formData
+          # required: true
+        - name: businessDays
+          type: string
+          in: formData
+          # required: true
+        - name: serviceId
+          type: number
+          in: formData
+          # required: true
+        - name: cost
+          type: number
+          in: formData
+          # required: true
       responses:
         200:
           description: carecenter details with token
