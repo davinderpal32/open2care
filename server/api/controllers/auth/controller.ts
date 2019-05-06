@@ -2,14 +2,42 @@ import AuthService from '../../services/auth.service';
 import { Request, Response } from 'express';
 import carecenterValidate from "../../../../validations/carecenters";
 
+
 export class Controller {
  
-  async careCenterRegister( req: Request, res: Response ){
-    const validates = await carecenterValidate.validate(req.body); 
-    if(validates){
-      res.json(validates);
-    }else{
+  async careCenterRegister( req: Request, res: Response , next:any) {
+
+    //console.log(req);
+    //const validates = await carecenterValidate.validateRegister(req.body);               /// validate request data
+    // if(validates.error == true){                    /// if validations failed
+    //   res.status(400)
+    //   .header("Access-Control-Allow-Origin", "*")
+    //   .json(validates).end();
+    // }else{
       AuthService.careCenterRegister(req.body).then(r =>{
+        if(r.error == false){
+          res
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .json(r);
+        }else{
+          res
+            .status(400)
+            .header("Access-Control-Allow-Origin", "*")
+            .json(r).end();
+        }
+      });
+    //}
+  }
+
+  async careCenterlogin(req: Request, res: Response) {
+    const validates = await carecenterValidate.validateLogin(req.body);                /// validate request data
+    if(validates.error == true){      /// if validations failed
+      res.status(400)
+      .header("Access-Control-Allow-Origin", "*")
+      .json(validates).end();
+    }else{
+      AuthService.careCenterLogin(req.body).then(r =>{
         if(r.error == false){
           res
             .status(200)
@@ -26,41 +54,85 @@ export class Controller {
       });
     }
   }
-  careCenterlogin(req: Request, res: Response): void {
-    AuthService.careCenterlogin(req.body).then(r =>
-      res
-        .status(200)
-        .header("Access-Control-Allow-Origin", "*")
-        .location(`<%= apiRoot %>/auth/`)
-        .json(r), 
-    );
+
+  async patientRegister(req: Request, res: Response) {
+    const validates = await carecenterValidate.validateForgot(req.body);    /// validate request data
+    if(validates.error == true){                       /// if validations failed
+      res.status(400)
+      .header("Access-Control-Allow-Origin", "*")
+      .json(validates).end();
+    }else{
+      AuthService.patientRegister(req.body).then(r =>{
+        if(r.error == false){
+          res
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r);
+        }else{
+          res
+            .status(400)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r).end();
+        }
+      });
+    }
   }
 
-  patientRegister(req: Request, res: Response): void {
-    AuthService.patientRegister(req.body).then(r =>{
-      if(r.error == false){
-        res
-          .status(200)
-          .header("Access-Control-Allow-Origin", "*")
-          .location(`<%= apiRoot %>/auth/`)
-          .json(r);
-      }else{
-        res
-          .status(400)
-          .header("Access-Control-Allow-Origin", "*")
-          .location(`<%= apiRoot %>/auth/`)
-          .json(r).end();
-      }
-    });
+
+  async patientlogin(req: Request, res: Response) {
+    const validates = await carecenterValidate.validateLogin(req.body);                /// validate request data
+    if(validates.error){      /// if validations failed
+      res.status(400)
+      .header("Access-Control-Allow-Origin", "*")
+      .json(validates).end();
+    }else{
+      AuthService.patientLogin(req.body).then(r =>{
+        if(r.error == false){
+          res
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r);
+        }else{
+          res
+            .status(400)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r).end();
+        }
+      });
+    }
   }
-  forgetPassword(req: Request, res: Response): void {
+
+  async forgetPassword(req: Request, res: Response) {
 
     var data = {url: req.headers.host,data:req.body }
-        AuthService.forgetPassword(data).then(r => {
-      if (r) res.json(r);
-      else res.status(404).end();
-    });
+    const validates = await carecenterValidate.validateForgot(req.body);    /// validate request data
+    if(validates.error == true){                       /// if validations failed
+      res.status(400)
+      .header("Access-Control-Allow-Origin", "*")
+      .json(validates).end();
+    }else{
+      AuthService.forgetPassword(data).then(r =>{
+        if(r.error == false){
+          res
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r);
+        }else{
+          res
+            .status(400)
+            .header("Access-Control-Allow-Origin", "*")
+            .location(`<%= apiRoot %>/auth/`)
+            .json(r).end();
+        }
+      });
+    }
   }
+
   resetPassword(req: Request, res: Response): void {
     var data = {authorization: req.headers.Authorization, 
     body:req.body};

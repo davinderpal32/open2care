@@ -77,13 +77,45 @@ export class AuthService {
             }
       }
 
-      async careCenterlogin (data: any){
+      async careCenterLogin (data: any){
         try{
-            // const text = 'Hello RSA!';
-            // const encrypted = key.encrypt(text, 'base64');
-            // console.log('encrypted: ', encrypted);
-          //  const role = key.decrypt(data.role, 'utf8');
             var usersdetail =  await Carecenters.findOne({where:{userName: data.userName}}).then(project => {
+                if(project)
+                return project.get();
+               });
+               
+            if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
+               
+                var userToken = await GenerateToken.generate(usersdetail.id);
+                let userInfo = {
+                    data: usersdetail,
+                    token: userToken,
+                    error: false
+                }
+                return userInfo;
+            }else{
+                let response = {
+                    data: '',
+                    message: "Incorrect username or password.",
+                    error: true
+                }
+                return Promise.resolve(response);
+            }
+
+        }
+        catch(error) {
+            let response = {
+                data: '',
+                error: error.message,
+            }
+            return Promise.resolve(response);
+        }
+      }
+
+
+      async patientLogin (data: any){
+        try{
+            var usersdetail =  await Patients.findOne({where:{email: data.email}}).then(project => {
                 if(project)
                 return project.get();
                });
@@ -115,15 +147,16 @@ export class AuthService {
         }
       }
 
+
       async forgetPassword (data: any){
         try{
-           if(data.data.role==''){
+           if(! data.data.role){
             var usersdetail =  await Carecenters.findOne({where:{'email':data.data.email}}).then(project => {
                 if(project)
                 return project.get();
                });      //return result for email id
             }else{
-                var usersdetail =  await Carecenters.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
+                var usersdetail =  await Patients.findOne({where:{'email':data.data.email,'role':data.data.role}}).then(project => {
                     if(project)
                     return project.get();
                    }); 

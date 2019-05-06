@@ -18,9 +18,5 @@ export default function routes(app: Application): void {
     if (err.name === 'UnauthorizedError') {
       res.status(401).send('Unauthorized access');
     } 
-    // if (err.isBoom) {
-      
-    //   return res.status(err.output.statusCode).json(err.output.payload);
-    // }
   });
 };
