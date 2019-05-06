@@ -9,22 +9,25 @@ export default express.Router()
     })
     .post('/',loginController.login)
     .get('/addtype',function(req, res, next){
-        res.render('addtype',{message: 'Login successfully'});
+        res.render('addtype',{message: ''});
     })
+    .post('/addtype',settingsController.addtype)
     .get('/addinsurance',function(req, res, next){
-        res.render('addinsurance',{message: 'Login successfully'});
+        res.render('addinsurance',{message: ''});
     })
     .get('/addservices',function(req, res, next){
-        res.render('addservices',{message: 'Login successfully'});
+        res.render('addservices',{message: ''});
     })
-    .get('/listtype',function(req, res, next){
-        res.render('listtype',{message: 'Login successfully'});
-    })
+    .get('/addtype',settingsController.listtype)
+    // .get('/listtype',function(req, res, next){
+    //     res.render('listtype',{message: ''});
+    // })
+    //  .post('/listtype',settingsController.listtype)
     .get('/listservices',function(req, res, next){
-        res.render('listservices',{message: 'Login successfully'});
+        res.render('listservices',{message: ''});
     })
     .get('/listinsurance',function(req, res, next){
-        res.render('listinsurance',{message: 'Login successfully'});
+        res.render('listinsurance',{message: ''});
     })
     .get('/reset/:email',function(req, res, next) {
         res.render('reset',{ message: '' });

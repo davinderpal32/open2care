@@ -1,32 +1,48 @@
 const NodeRSA = require('node-rsa');
 const Bcrypt = require("bcryptjs");
-import { CarecenterServices } from "../../../models";
+import { CarecenterTypes } from "../../../models";
 
 export class settingsService {
  
-      async addservices (data: any){
+      async addtype (data: any){
         try{
-          var usersdetail =  await CarecenterServices.findOne({where:{email:data.email, role:'admin'}}).then(project => {
-            if(project)
-            return project.get();
-          });          
-            if(usersdetail && Bcrypt.compareSync(data.password, usersdetail.password)){
-                let userInfo = {
-                    data: usersdetail,
-                    message: "Login successfully.",
-                    error: false
-                }
-                return userInfo;
-            }else{
+            // get result if email already exists
+            var responses = await CarecenterTypes.count({where:{ typeName: data.typeName }},{ plain: true }).then( (result) => {return(result)  } );
+            if(responses > 0) {                
                 let response = {
                     data: '',
-                    message: "wrong email or password.",
+                    message: "Type Name is already exists.",
                     error: true
                 }
                 return Promise.resolve(response);
             }
+            var userInfo =  await CarecenterTypes.create(data);               // insert carecenter data
+            let response = {
+                data: '',
+                message: "Successfully Inserted",
+                error: false
+            }
+            return response;
+        }catch(error) {
+            let response = {
+                data: '',
+                message: error.message,
+                error: true
+            }
+            return Promise.resolve(response);
         }
-        catch(error) {
+      }
+
+      async listtype (data: any){
+        try{
+            CarecenterTypes.findOne()
+            let response = {
+                data: CarecenterTypes,
+                message: "Successfully Inserted",
+                error: false
+            }
+            return response;
+        }catch(error) {
             let response = {
                 data: '',
                 message: error.message,

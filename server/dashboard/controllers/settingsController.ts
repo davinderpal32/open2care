@@ -4,15 +4,28 @@ import { Request, Response } from 'express';
 
 export class settingsController {
  
-  index(req: Request, res: Response): void {
-    
-    settingsService.addservices(req.body).then(r =>{
+  addtype(req: Request, res: Response): void {
+    settingsService.addtype(req.body).then(r =>{
       if(r.error == false){
-        res.render('dashboard',{message: 'Login successfully'});
+        res.render('listtype',{message: r.message});
       }else{
-        res.render('index',{message: r.message});
+        res.render('addtype',{message: r.message});
       }
     });
   }
+
+
+  listtype(req: Request, res: Response): void {
+    settingsService.listtype(req.body).then(r =>{
+      if(r.error == false){
+        res.render('listtype',{message: r.message});
+      }else{
+        res.render('addtype',{message: r.message});
+      }
+    });
+  }
+
+
+
 }
 export default new settingsController();
