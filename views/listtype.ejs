@@ -22,15 +22,16 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+                                            <% data.forEach(function(type){ %>
+                                            <tr>
+                                                    <td><%= type.id %></td>
+                                                    <td><%= type.typeName %></td>
+                                                    <td><span style="padding-right: 10px;"><a href="edittype/<%= type.id %>" alt=""><button class="btn btn-primary">Edit</button></a></span>
+                                                     <span style="padding-right: 10px;"><a href="deletetype/<%= type.id %>" alt=""><button class="btn btn-danger">Delete</button></a></span>    
+                                                        </td>
+                                                </tr>
+                                                <% })%>
                                     </tbody>
-                                    <tfoot>
-                                        <tr>
-                                                <th>id</th>
-                                                <th>Type Name</th>
-                                                <th>Action</th>
-                                        </tr>
-                                    </tfoot>
                                 </table>
                             </div>
 

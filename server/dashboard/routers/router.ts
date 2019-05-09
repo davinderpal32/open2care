@@ -18,11 +18,18 @@ export default express.Router()
     .get('/addservices',function(req, res, next){
         res.render('addservices',{message: ''});
     })
-    .get('/addtype',settingsController.listtype)
-    // .get('/listtype',function(req, res, next){
-    //     res.render('listtype',{message: ''});
-    // })
-    //  .post('/listtype',settingsController.listtype)
+    .get('/addtype',settingsController.addtype)
+    .get('/edittype/:id',settingsController.edittype)
+    .post('/edittype/:id',settingsController.updatetype)
+    .get('/deletetype/:id',settingsController.deletetype)
+    .get('/listtype',settingsController.listtype)
+    .post('/addinsurance',settingsController.addinsurance)
+    .get('/editinsurance/:id',settingsController.editinsurance)
+    .post('/editinsurance/:id',settingsController.updateinsurance)
+    .get('/deletetype/:id',settingsController.deletetype)
+    .get('/listinsurance',settingsController.listinsurance)
+    
+    
     .get('/listservices',function(req, res, next){
         res.render('listservices',{message: ''});
     })

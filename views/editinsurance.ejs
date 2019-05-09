@@ -2,7 +2,7 @@
 <%- include sidebar.ejs %>
 <div class="main-content-wrap sidenav-open d-flex flex-column">
         <div class="breadcrumb">
-          <h1>Add Insurance</h1>
+          <h1>Edit Insurance</h1>
       </div>
       <div class="separator-breadcrumb border-top"></div>
       <div class="row">
@@ -10,12 +10,12 @@
           <div class="col-md-12">
               <div class="card mb-4">
                   <div class="card-body">
-                      <form method="post" action="addinsurance">
+                      <form method="post">
                           <div class="row align-items-end">
                               <div class="col-md-6 form-group mb-3">
                                   <label for="typeName">Insurance name</label>
-                                  <input type="text" class="form-control" name="name" id="name" placeholder="Enter your Insurance name">
-                              </div>
+                                  <input type="text" class="form-control" name="name" id="name" value="<%= data.name %>" placeholder="Enter your first name">
+                                </div>
                               <div class="col-md-6 form-group mb-3">
                                 <input type="submit" name="submit" class="btn btn-info btn-md" value="submit">
                               </div>

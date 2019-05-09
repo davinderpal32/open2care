@@ -1,5 +1,4 @@
 'use strict';
-const Joi = require('joi');
 module.exports = (sequelize, DataTypes) => {
   
   const CarecenterTypes = sequelize.define('CarecenterTypes', {
